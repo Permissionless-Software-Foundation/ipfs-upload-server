@@ -62,8 +62,8 @@ docs
 coverage
 database/
 system-user-*.json
-files/*
+uppy-files/*
 
 
 !README.md
-!files/README.md
+!uppy-files/README.md
