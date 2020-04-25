@@ -1,4 +1,4 @@
-const validator = require('../../middleware/validators')
+// const validator = require('../../middleware/validators')
 
 // Instantiated Metadata controller
 const CONTROLLER = require('./controller')
@@ -21,7 +21,7 @@ module.exports.routes = [
     route: '/',
     handlers: [
       // Only logged-in users can view payloads.
-      //validator.ensureUser,
+      // validator.ensureUser,
       controller.getFiles
     ]
   },
@@ -30,7 +30,7 @@ module.exports.routes = [
     route: '/:id',
     handlers: [
       // Only logged-in users can get payload details..
-      //validator.ensureUser,
+      // validator.ensureUser,
       controller.getFile
     ]
   },
@@ -39,7 +39,7 @@ module.exports.routes = [
     route: '/:id',
     handlers: [
       // Only logged-in users can update payloads.
-      //validator.ensureUser,
+      // validator.ensureUser,
       controller.getFile,
       controller.updateFile
     ]
