@@ -8,6 +8,7 @@ const File = new mongoose.Schema({
   txId: { type: String }, // Memo transaction Id
   meta: { type: Object },
   bchAddr: { type: String }, // BCH address assigned to this file.
+  walletIndex: { type: Number }, // The HD wallet index used to generate this address.
   hasBeenPaid: { type: Boolean, default: false }, // Flag if hosting cost has been paid.
   pinExpires: { type: String }, // ISO date when IPFS pin for hosted content will expire.
   hostingCost: { type: Number } // Value in satoshis of the hosting cost for this file.
