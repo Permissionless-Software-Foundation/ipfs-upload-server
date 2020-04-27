@@ -687,7 +687,7 @@ describe('#Files', async function () {
       assert.property(file, '_id')
       assert.property(file, 'createdTimestamp')
       assert.property(file, 'schemaVersion')
-      assert.property(file, 'updateIndex')
+      // assert.property(file, 'updateIndex')
 
       assert.equal(file._id, id)
       assert.equal(file.schemaVersion, 20)
