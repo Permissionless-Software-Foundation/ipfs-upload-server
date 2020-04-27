@@ -4,12 +4,14 @@ const File = new mongoose.Schema({
   schemaVersion: { type: Number, required: true },
   createdTimestamp: { type: String, required: true }, // Time file was uploaded.
   size: { type: Number, required: true }, // size of the file in bytes
-  lastAccessed: { type: String }, // Last time the file was accessed.
-  userIdUpload: { type: String }, // User that uploaded the file.
   payloadLink: { type: String }, // IPFS hash of current file.
-  updateIndex: { type: Number }, // Incremented every time the metadata is updated.
   txId: { type: String }, // Memo transaction Id
-  meta: { type: Object }
+  meta: { type: Object },
+  bchAddr: { type: String }, // BCH address assigned to this file.
+  walletIndex: { type: Number }, // The HD wallet index used to generate this address.
+  hasBeenPaid: { type: Boolean, default: false }, // Flag if hosting cost has been paid.
+  pinExpires: { type: String }, // ISO date when IPFS pin for hosted content will expire.
+  hostingCost: { type: Number } // Value in satoshis of the hosting cost for this file.
 })
 
 module.exports = mongoose.model('file', File)

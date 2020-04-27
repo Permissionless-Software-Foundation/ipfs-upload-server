@@ -2,7 +2,6 @@
  * Controller class for file enpoints
  */
 
-
 const File = require('../../models/files')
 
 const config = require('../../../config')
@@ -10,7 +9,7 @@ const config = require('../../../config')
 let _this
 
 class FileController {
-  constructor() {
+  constructor () {
     _this = this
     this.File = File
     this.config = config
@@ -50,24 +49,17 @@ class FileController {
    *     }
    */
 
-  async createFile(ctx) {
+  async createFile (ctx) {
     try {
       const file = new _this.File(ctx.request.body.file)
 
       // Input Validation.
-      if (
-        !file.schemaVersion ||
-        typeof file.schemaVersion !== 'number'
-      ) {
+      if (!file.schemaVersion || typeof file.schemaVersion !== 'number') {
         throw new Error("Property 'schemaVersion' must be a number!")
       }
-      if (
-        !file.size ||
-        typeof file.size !== 'number'
-      ) {
+      if (!file.size || typeof file.size !== 'number') {
         throw new Error("Property 'size' must be a number!")
       }
-
 
       // These properties shouldn't be sent in the petition,
       // because they're created by the controller
@@ -127,7 +119,7 @@ class FileController {
    *     }
    *
    */
-  async getFiles(ctx) {
+  async getFiles (ctx) {
     try {
       const files = await _this.File.find({})
 
@@ -166,7 +158,7 @@ class FileController {
    *
    */
 
-  async getFile(ctx, next) {
+  async getFile (ctx, next) {
     try {
       const file = await _this.File.findById(ctx.params.id)
 
@@ -199,25 +191,12 @@ class FileController {
    * @apiExample Example usage:
    * curl -H "Content-Type: application/json" -H "Authorization: Bearer <JWT Token>" -X PUT -d '{ "file": { "schemaVersion": 1 ,"meta":"test1" } }' localhost:5001/files/5df85d4bf1cedc505be61807
    *
-   * @apiParam {Object}  file File object (required)
-   * @apiParam {Number}  file.schemaVersion (required)
-   * @apiParam {String}  file.createdTimestamp (required)
-   * @apiParam {Number}  file.size (required)
-   * @apiParam {String}  file.lastAccessed (optional) .
-   * @apiParam {String}  file.userIdUpload (optional) .
-   * @apiParam {String}  file.payloadLink (optional).
-   * @apiParam {String}  file.updateIndex (optional).
-   * @apiParam {Object}  file.meta (optional) .
-   *
-   * @apiSuccess {Object}   file                    	file object
-   * @apiSuccess {ObjectId} file._id                	file id
-   * @apiSuccess {Number}   file.schemaVersion      	file version
-   * @apiSuccess {String}   file.createdTimestamp   	Time file was uploaded
-   * @apiSuccess {Number}   file.size (required)		Size of the file in bytes
-   * @apiSuccess {String}   file.lastAccessed       	Last time the file was accessed.
-   * @apiSuccess {String}   file.userIdUpload       	User that uploaded the file
-   * @apiSuccess {String}   file.payloadLink        	IPFS hash of current file.
-   * @apiSuccess {String}   file.updateIndex
+   * @apiSuccess {Object}   file                    file object
+   * @apiSuccess {ObjectId} file._id                file id
+   * @apiSuccess {Number}   file.schemaVersion      file version
+   * @apiSuccess {String}   file.createdTimestamp   Time file was uploaded
+   * @apiSuccess {Number}   file.size (required) Size of the file in bytes
+   * @apiSuccess {String}   file.payloadLink        IPFS hash of current file.
    * @apiSuccess {Object}   file.meta
    *
    * @apiSuccessExample {json} Success-Response:
@@ -239,7 +218,7 @@ class FileController {
    *}
    *
    */
-  async updateFile(ctx) {
+  async updateFile (ctx) {
     try {
       // Values obtain from user request.
       // This variable is intended to validate the properties
@@ -251,17 +230,11 @@ class FileController {
       // console.log(file)
 
       // Input validation
-      if (
-        fileObj.schemaVersion &&
-        typeof fileObj.schemaVersion !== 'number'
-      ) {
+      if (fileObj.schemaVersion && typeof fileObj.schemaVersion !== 'number') {
         throw new Error("Property 'schemaVersion' must be a number!")
       }
 
-      if (
-        fileObj.size &&
-        typeof fileObj.size !== 'number'
-      ) {
+      if (fileObj.size && typeof fileObj.size !== 'number') {
         throw new Error("Property 'size' must be a number!")
       }
 
@@ -292,7 +265,6 @@ class FileController {
       ctx.throw(422, error.message)
     }
   }
-
 }
 
 module.exports = FileController
