@@ -5,14 +5,17 @@
 const File = require('../../models/files')
 
 const config = require('../../../config')
+const BCHJS = require('../../lib/bch')
+const bchjs = new BCHJS()
 
 let _this
 
 class FileController {
-  constructor () {
+  constructor() {
     _this = this
     this.File = File
     this.config = config
+    this.bchjs = bchjs
   }
 
   /**
@@ -49,7 +52,7 @@ class FileController {
    *     }
    */
 
-  async createFile (ctx) {
+  async createFile(ctx) {
     try {
       const file = new _this.File(ctx.request.body.file)
 
@@ -79,7 +82,19 @@ class FileController {
       file.updateIndex = 1
 
       // Set current time
-      file.createdTimestamp = new Date().getTime()
+      file.createdTimestamp = new Date().getTime() / 1000
+
+      let fileFee
+      if (config.env === 'test') {
+        fileFee = 1
+
+      } else {
+        const feeResult = await _this.getHostingFee(file.size)
+        fileFee = feeResult.SAT
+
+      }
+
+      file.hostingCost = fileFee
 
       await file.save()
 
@@ -119,7 +134,7 @@ class FileController {
    *     }
    *
    */
-  async getFiles (ctx) {
+  async getFiles(ctx) {
     try {
       const files = await _this.File.find({})
 
@@ -158,7 +173,7 @@ class FileController {
    *
    */
 
-  async getFile (ctx, next) {
+  async getFile(ctx, next) {
     try {
       const file = await _this.File.findById(ctx.params.id)
 
@@ -218,7 +233,7 @@ class FileController {
    *}
    *
    */
-  async updateFile (ctx) {
+  async updateFile(ctx) {
     try {
       // Values obtain from user request.
       // This variable is intended to validate the properties
@@ -263,6 +278,59 @@ class FileController {
       }
     } catch (error) {
       ctx.throw(422, error.message)
+    }
+  }
+
+  // calculate hosting fee
+  async getHostingFee(fileBytes) {
+    let feePerMB = _this.config.feePerMb // fee USD per MB
+    let satPerBch = 3111722 // Satoshis per Bch
+    try {
+      if (!fileBytes || typeof fileBytes !== 'number')
+        throw new Error('fileBytes must be a number')
+
+      if (!feePerMB || typeof feePerMB !== 'number')
+        throw new Error('feePerMB config property must be a number')
+
+      //convert bytes to MB
+      const fileKb = fileBytes / 1024
+      const fileMb = fileKb / 1024
+      // console.log(`fileMb : ${fileMb}`)
+
+      let feeInUSD  // file fee in usd
+      let feeInBCH  // file fee in bch
+      let feeInSAT  // file fee in satoshis
+
+      if (fileMb <= 10) {
+        feeInUSD = feePerMB * 10 // minimun fee is 0.01 USD
+      } else {
+        feeInUSD = feePerMB * fileMb
+      }
+
+      // Get bch price in USD
+      const USDperBCH = await _this.bchjs.getPrice()
+      // console.log(`USDperBCH : ${USDperBCH}`)
+
+      // Calculating fees in bch
+      const bchFee = feeInUSD / USDperBCH
+      feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
+
+      // Calculating fees in satoshis
+      const satFee = feeInBCH * satPerBch
+      feeInSAT = Number(satFee.toFixed(8)) // Rounds and limit to 8 decimals
+
+      const feeData = {
+        USD: feeInUSD,
+        SAT: feeInSAT,
+        BCH: feeInBCH
+      }
+
+      //console.log(`feeData : ${JSON.stringify(feeData)}`)
+
+      return feeData
+    }
+    catch (error) {
+      throw error
     }
   }
 }
