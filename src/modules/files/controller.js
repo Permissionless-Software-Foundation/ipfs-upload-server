@@ -8,6 +8,12 @@ const config = require('../../../config')
 const BCHJS = require('../../lib/bch')
 const bchjs = new BCHJS()
 
+const GetAddress = require('slp-cli-wallet/src/commands/get-address')
+const getAddress = new GetAddress()
+
+const util = require('../../lib/utils/json-files')
+
+
 let _this
 
 class FileController {
@@ -16,6 +22,8 @@ class FileController {
     this.File = File
     this.config = config
     this.bchjs = bchjs
+    this.util = util
+    this.getAddress = getAddress
   }
 
   /**
@@ -85,16 +93,28 @@ class FileController {
       file.createdTimestamp = new Date().getTime() / 1000
 
       let fileFee
+      let walletPath
       if (config.env === 'test') {
         fileFee = 1
+        walletPath = `${__dirname}/../../../config/wallet-test.json`
 
       } else {
         const feeResult = await _this.getHostingFee(file.size)
         fileFee = feeResult.SAT
+        walletPath = `${__dirname}/../../../config/wallet.json`
 
       }
 
       file.hostingCost = fileFee
+
+
+      // Get the HD index for the next wallet address.
+      const walletData = await _this.util.readJSON(walletPath)
+      // console.log(`walletData: ${JSON.stringify(walletData, null, 2)}`)
+      file.walletIndex = walletData.nextAddress
+
+      // Generate a BCH address for this user.
+      file.bchAddr = await _this.getAddress.getAddress(walletPath)
 
       await file.save()
 
@@ -103,6 +123,7 @@ class FileController {
         file
       }
     } catch (err) {
+      console.log(err)
       ctx.throw(422, err.message)
     }
   }
@@ -284,7 +305,6 @@ class FileController {
   // calculate hosting fee
   async getHostingFee(fileBytes) {
     let feePerMB = _this.config.feePerMb // fee USD per MB
-    let satPerBch = 3111722 // Satoshis per Bch
     try {
       if (!fileBytes || typeof fileBytes !== 'number')
         throw new Error('fileBytes must be a number')
@@ -316,9 +336,7 @@ class FileController {
       feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
 
       // Calculating fees in satoshis
-      const satFee = feeInBCH * satPerBch
-      feeInSAT = Number(satFee.toFixed(8)) // Rounds and limit to 8 decimals
-
+      feeInSAT = await _this.bchjs.bchToSatoshis(bchFee)
       const feeData = {
         USD: feeInUSD,
         SAT: feeInSAT,

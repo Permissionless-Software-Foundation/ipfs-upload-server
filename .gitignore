@@ -64,6 +64,12 @@ database/
 system-user-*.json
 uppy-files/*
 
+# wallet data
+config/wallet-info.txt
+config/wallet.json
+config/wallet-test-info.txt
+config/wallet-test.json
 
 !README.md
 !uppy-files/README.md
+

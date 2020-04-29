@@ -16,7 +16,10 @@ const adminLib = require('../src/lib/admin')
 const errorMiddleware = require('../src/middleware')
 const wlogger = require('../src/lib/wlogger')
 
-async function startServer () {
+const BCHJSLIB = require('../src/lib/bch')
+const bchjsLib = new BCHJSLIB()
+
+async function startServer() {
   // Create a Koa instance.
   const app = new Koa()
   app.keys = [config.session]
@@ -67,8 +70,19 @@ async function startServer () {
   const success = await adminLib.createSystemUser()
   if (success) console.log('System admin user created.')
 
+  await tryCreateWallet()
   return app
 }
+
+// Create the wallet if it doesn't exist
+tryCreateWallet = async () => {
+  try {
+    const walletPath = `${__dirname}/../config/wallet`
+    await bchjsLib.createWallet(walletPath)
+  } catch (error) {
+  }
+}
+
 // startServer()
 
 // export default app
