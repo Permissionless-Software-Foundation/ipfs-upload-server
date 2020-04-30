@@ -62,6 +62,7 @@ docs
 coverage
 database/
 system-user-*.json
+<<<<<<< HEAD
 uppy-files/*
 
 # wallet data
@@ -72,4 +73,3 @@ config/wallet-test.json
 
 !README.md
 !uppy-files/README.md
-

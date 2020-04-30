@@ -19,7 +19,7 @@ const wlogger = require('../src/lib/wlogger')
 const BCHJSLIB = require('../src/lib/bch')
 const bchjsLib = new BCHJSLIB()
 
-async function startServer() {
+async function startServer () {
   // Create a Koa instance.
   const app = new Koa()
   app.keys = [config.session]
@@ -27,10 +27,13 @@ async function startServer() {
   // Connect to the Mongo Database.
   mongoose.Promise = global.Promise
   mongoose.set('useCreateIndex', true) // Stop deprecation warning.
-  await mongoose.connect(config.database, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true
-  })
+  await mongoose.connect(
+    config.database,
+    {
+      useUnifiedTopology: true,
+      useNewUrlParser: true
+    }
+  )
 
   // MIDDLEWARE START
 
@@ -75,12 +78,11 @@ async function startServer() {
 }
 
 // Create the wallet if it doesn't exist
-tryCreateWallet = async () => {
+const tryCreateWallet = async () => {
   try {
     const walletPath = `${__dirname}/../config/wallet`
     await bchjsLib.createWallet(walletPath)
-  } catch (error) {
-  }
+  } catch (error) {}
 }
 
 // startServer()
