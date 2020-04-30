@@ -2,9 +2,10 @@
  * Controller class for file enpoints
  */
 
-const File = require('../../models/files')
-
 const config = require('../../../config')
+const File = require('../../models/files')
+const wlogger = require('../../lib/wlogger')
+
 const BCHJS = require('../../lib/bch')
 const bchjs = new BCHJS()
 
@@ -119,7 +120,7 @@ class FileController {
         file
       }
     } catch (err) {
-      console.log(err)
+      wlogger.error('Error in files/controller.js/createFile(): ', err.message)
       ctx.throw(422, err.message)
     }
   }
@@ -156,7 +157,8 @@ class FileController {
       const files = await _this.File.find({})
 
       ctx.body = { files }
-    } catch (error) {
+    } catch (err) {
+      wlogger.error('Error in files/controller.js/getFiles(): ', err.message)
       ctx.throw(404)
     }
   }
@@ -202,6 +204,8 @@ class FileController {
         file
       }
     } catch (err) {
+      wlogger.error('Error in files/controller.js/getFile(): ', err.message)
+
       if (err === 404 || err.name === 'CastError') {
         ctx.throw(404)
       }
@@ -294,17 +298,23 @@ class FileController {
         file
       }
     } catch (error) {
+      wlogger.error('Error in files/controller.js/updateFile(): ', err.message)
       ctx.throw(422, error.message)
     }
   }
 
   // calculate hosting fee
   async getHostingFee (fileBytes) {
-    const feePerMB = _this.config.feePerMb // fee USD per MB
     try {
-      if (!fileBytes || typeof fileBytes !== 'number') { throw new Error('fileBytes must be a number') }
+      const feePerMB = _this.config.feePerMb // fee USD per MB
 
-      if (!feePerMB || typeof feePerMB !== 'number') { throw new Error('feePerMB config property must be a number') }
+      if (!fileBytes || typeof fileBytes !== 'number') {
+        throw new Error('fileBytes must be a number')
+      }
+
+      if (!feePerMB || typeof feePerMB !== 'number') {
+        throw new Error('feePerMB config property must be a number')
+      }
 
       // convert bytes to MB
       const fileKb = fileBytes / 1024
@@ -341,6 +351,10 @@ class FileController {
 
       return feeData
     } catch (error) {
+      wlogger.error(
+        'Error in files/controller.js/getHostingFee(): ',
+        err.message
+      )
       throw error
     }
   }

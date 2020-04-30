@@ -740,19 +740,17 @@ describe('#Files', async function () {
   })
   describe('getHostingFee', () => {
     it('should throw error  if fileBytes parameter is no include', async () => {
-
       try {
         await controller.getHostingFee()
         assert(false, 'Unexpected result')
       } catch (err) {
         assert.include(
           err.message,
-          "fileBytes must be a number"
+          'fileBytes must be a number'
         )
       }
     })
     it('should return hosting fee', async () => {
-
       try {
         const fileSize = 1024
         sandbox
@@ -766,12 +764,10 @@ describe('#Files', async function () {
         assert.property(result, 'SAT')
         assert.isNumber(result.USD)
         assert.isNumber(result.BCH)
-        assert.isNumber(result.SAT) 
-
+        assert.isNumber(result.SAT)
       } catch (err) {
         console.log(err)
         assert(false, 'Unexpected result')
-
       }
     })
   })
