@@ -2,17 +2,24 @@ const testUtils = require('./utils')
 const axios = require('axios').default
 const assert = require('chai').assert
 const config = require('../config')
+const sinon = require('sinon')
+
+// Mocking data libraries.
+const mockData = require('./mocks/files-mocks')
 
 const util = require('util')
 util.inspect.defaultOptions = { depth: 1 }
 
-// const fs = require('fs')
+const CONTROLLER = require('../src/modules/files/controller')
+const controller = new CONTROLLER()
 
 const LOCALHOST = `http://localhost:${config.port}`
 
 const context = {}
 
 describe('#Files', async function () {
+  let sandbox
+
   before(async () => {
     // Create a second test user.
     const userObj = {
@@ -29,7 +36,10 @@ describe('#Files', async function () {
     context.adminJWT = adminJWT
   })
 
-  after(() => {})
+  // Restore the sandbox before each test.
+  beforeEach(() => (sandbox = sinon.createSandbox()))
+
+  afterEach(() => sandbox.restore())
 
   describe('POST - Create Files', () => {
     /*         it('should reject File creation if no JWT provided', async () => {
@@ -268,9 +278,18 @@ describe('#Files', async function () {
       // console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
 
       assert.equal(result.data.success, true, 'success expected')
+
+      assert.equal(result.data.file.schemaVersion, 1)
+      assert.equal(result.data.file.size, 1)
+
       assert.property(result.data.file, '_id')
       assert.property(result.data.file, 'schemaVersion')
       assert.property(result.data.file, 'createdTimestamp')
+      assert.property(result.data.file, 'size')
+      assert.property(result.data.file, 'hostingCost')
+      assert.property(result.data.file, 'bchAddr')
+      assert.property(result.data.file, 'hasBeenPaid')
+      assert.property(result.data.file, 'walletIndex')
     })
 
     it('should create file with all inputs', async function () {
@@ -298,6 +317,15 @@ describe('#Files', async function () {
       assert.equal(result.data.file.schemaVersion, 1)
       assert.equal(result.data.file.payloadLink, 'link')
       assert.equal(result.data.file.meta.functionality, 'test')
+
+      assert.property(result.data.file, '_id')
+      assert.property(result.data.file, 'schemaVersion')
+      assert.property(result.data.file, 'createdTimestamp')
+      assert.property(result.data.file, 'size')
+      assert.property(result.data.file, 'hostingCost')
+      assert.property(result.data.file, 'bchAddr')
+      assert.property(result.data.file, 'hasBeenPaid')
+      assert.property(result.data.file, 'walletIndex')
     })
   })
 
@@ -389,13 +417,20 @@ describe('#Files', async function () {
 
       const result = await axios(options)
       const files = result.data.files
-      // console.log(`metadatas : ${JSON.stringify(metadatas, null, 2)}`)
+      // console.log(`files: ${JSON.stringify(files, null, 2)}`)
 
       // Save this value for later tests.
       context.fileId = files[1]._id
-      // console.log(` metadata id  :  ${context.metadataId}`)
 
       assert.isArray(files)
+      assert.property(files[0], '_id')
+      assert.property(files[0], 'schemaVersion')
+      assert.property(files[0], 'createdTimestamp')
+      assert.property(files[0], 'size')
+      assert.property(files[0], 'hostingCost')
+      assert.property(files[0], 'bchAddr')
+      assert.property(files[0], 'hasBeenPaid')
+      assert.property(files[0], 'walletIndex')
       assert.property(files[0], 'schemaVersion')
       assert.property(files[0], 'createdTimestamp')
     })
@@ -458,9 +493,18 @@ describe('#Files', async function () {
 
       const file = result.data.file
 
-      assert.property(file, '_id')
-      assert.property(file, 'createdTimestamp')
       assert.equal(file._id, id)
+
+      assert.property(file, '_id')
+      assert.property(file, 'schemaVersion')
+      assert.property(file, 'createdTimestamp')
+      assert.property(file, 'size')
+      assert.property(file, 'hostingCost')
+      assert.property(file, 'bchAddr')
+      assert.property(file, 'hasBeenPaid')
+      assert.property(file, 'walletIndex')
+      assert.property(file, 'schemaVersion')
+      assert.property(file, 'createdTimestamp')
     })
   })
 
@@ -693,6 +737,36 @@ describe('#Files', async function () {
       assert.equal(file.schemaVersion, 20)
       assert.equal(file.size, 30)
       // assert.equal(file.userIdUpload, 'id user2')
+    })
+  })
+
+  describe('getHostingFee', () => {
+    it('should throw error  if fileBytes parameter is no include', async () => {
+      try {
+        await controller.getHostingFee()
+        assert(false, 'Unexpected result')
+      } catch (err) {
+        assert.include(err.message, 'fileBytes must be a number')
+      }
+    })
+
+    it('should return hosting fee', async () => {
+      try {
+        const fileSize = 1024
+        sandbox.stub(controller.bchjs, 'getPrice').resolves(mockData.price)
+
+        const result = await controller.getHostingFee(fileSize)
+        // console.log(`result : ${JSON.stringify(result)}`)
+        assert.property(result, 'USD')
+        assert.property(result, 'BCH')
+        assert.property(result, 'SAT')
+        assert.isNumber(result.USD)
+        assert.isNumber(result.BCH)
+        assert.isNumber(result.SAT)
+      } catch (err) {
+        console.log(err)
+        assert(false, 'Unexpected result')
+      }
     })
   })
 })

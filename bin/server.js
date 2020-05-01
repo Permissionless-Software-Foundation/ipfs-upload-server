@@ -16,6 +16,9 @@ const adminLib = require('../src/lib/admin')
 const errorMiddleware = require('../src/middleware')
 const wlogger = require('../src/lib/wlogger')
 
+const BCHJSLIB = require('../src/lib/bch')
+const bchjsLib = new BCHJSLIB()
+
 async function startServer () {
   // Create a Koa instance.
   const app = new Koa()
@@ -24,10 +27,13 @@ async function startServer () {
   // Connect to the Mongo Database.
   mongoose.Promise = global.Promise
   mongoose.set('useCreateIndex', true) // Stop deprecation warning.
-  await mongoose.connect(config.database, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true
-  })
+  await mongoose.connect(
+    config.database,
+    {
+      useUnifiedTopology: true,
+      useNewUrlParser: true
+    }
+  )
 
   // MIDDLEWARE START
 
@@ -67,8 +73,18 @@ async function startServer () {
   const success = await adminLib.createSystemUser()
   if (success) console.log('System admin user created.')
 
+  await tryCreateWallet()
   return app
 }
+
+// Create the wallet if it doesn't exist
+const tryCreateWallet = async () => {
+  try {
+    const walletPath = `${__dirname}/../config/wallet`
+    await bchjsLib.createWallet(walletPath)
+  } catch (error) {}
+}
+
 // startServer()
 
 // export default app

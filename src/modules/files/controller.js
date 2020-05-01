@@ -2,9 +2,17 @@
  * Controller class for file enpoints
  */
 
-const File = require('../../models/files')
-
 const config = require('../../../config')
+const File = require('../../models/files')
+const wlogger = require('../../lib/wlogger')
+
+const BCHJS = require('../../lib/bch')
+const bchjs = new BCHJS()
+
+const GetAddress = require('slp-cli-wallet/src/commands/get-address')
+const getAddress = new GetAddress()
+
+const util = require('../../lib/utils/json-files')
 
 let _this
 
@@ -13,6 +21,9 @@ class FileController {
     _this = this
     this.File = File
     this.config = config
+    this.bchjs = bchjs
+    this.util = util
+    this.getAddress = getAddress
   }
 
   /**
@@ -79,7 +90,28 @@ class FileController {
       file.updateIndex = 1
 
       // Set current time
-      file.createdTimestamp = new Date().getTime()
+      file.createdTimestamp = new Date().getTime() / 1000
+
+      let fileFee
+      let walletPath
+      if (config.env === 'test') {
+        fileFee = 1
+        walletPath = `${__dirname}/../../../config/wallet-test.json`
+      } else {
+        const feeResult = await _this.getHostingFee(file.size)
+        fileFee = feeResult.SAT
+        walletPath = `${__dirname}/../../../config/wallet.json`
+      }
+
+      file.hostingCost = Math.floor(fileFee)
+
+      // Get the HD index for the next wallet address.
+      const walletData = await _this.util.readJSON(walletPath)
+      // console.log(`walletData: ${JSON.stringify(walletData, null, 2)}`)
+      file.walletIndex = walletData.nextAddress
+
+      // Generate a BCH address for this user.
+      file.bchAddr = await _this.getAddress.getAddress(walletPath)
 
       await file.save()
 
@@ -88,6 +120,7 @@ class FileController {
         file
       }
     } catch (err) {
+      wlogger.error('Error in files/controller.js/createFile(): ', err.message)
       ctx.throw(422, err.message)
     }
   }
@@ -124,7 +157,8 @@ class FileController {
       const files = await _this.File.find({})
 
       ctx.body = { files }
-    } catch (error) {
+    } catch (err) {
+      wlogger.error('Error in files/controller.js/getFiles(): ', err.message)
       ctx.throw(404)
     }
   }
@@ -170,6 +204,8 @@ class FileController {
         file
       }
     } catch (err) {
+      wlogger.error('Error in files/controller.js/getFile(): ', err.message)
+
       if (err === 404 || err.name === 'CastError') {
         ctx.throw(404)
       }
@@ -261,8 +297,65 @@ class FileController {
       ctx.body = {
         file
       }
-    } catch (error) {
-      ctx.throw(422, error.message)
+    } catch (err) {
+      wlogger.error('Error in files/controller.js/updateFile(): ', err.message)
+      ctx.throw(422, err.message)
+    }
+  }
+
+  // calculate hosting fee
+  async getHostingFee (fileBytes) {
+    try {
+      const feePerMB = _this.config.feePerMb // fee USD per MB
+
+      if (!fileBytes || typeof fileBytes !== 'number') {
+        throw new Error('fileBytes must be a number')
+      }
+
+      if (!feePerMB || typeof feePerMB !== 'number') {
+        throw new Error('feePerMB config property must be a number')
+      }
+
+      // convert bytes to MB
+      const fileKb = fileBytes / 1024
+      const fileMb = fileKb / 1024
+      // console.log(`fileMb : ${fileMb}`)
+
+      let feeInUSD // file fee in usd
+      // let feeInBCH // file fee in bch
+      // let feeInSAT // file fee in satoshis
+
+      if (fileMb <= 10) {
+        feeInUSD = feePerMB * 10 // minimun fee is 0.01 USD
+      } else {
+        feeInUSD = feePerMB * fileMb
+      }
+
+      // Get bch price in USD
+      const USDperBCH = await _this.bchjs.getPrice()
+      // console.log(`USDperBCH : ${USDperBCH}`)
+
+      // Calculating fees in bch
+      const bchFee = feeInUSD / USDperBCH
+      const feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
+
+      // Calculating fees in satoshis
+      const feeInSAT = await _this.bchjs.bchToSatoshis(bchFee)
+      const feeData = {
+        USD: feeInUSD,
+        SAT: feeInSAT,
+        BCH: feeInBCH
+      }
+
+      // console.log(`feeData : ${JSON.stringify(feeData)}`)
+
+      return feeData
+    } catch (err) {
+      wlogger.error(
+        'Error in files/controller.js/getHostingFee(): ',
+        err.message
+      )
+      throw err
     }
   }
 }

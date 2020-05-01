@@ -5,5 +5,7 @@
 
 module.exports = {
   port: process.env.PORT || 5001,
-  logPass: 'test'
+  logPass: 'test',
+  network: 'testnet',
+  feePerMb: 0.001
 }
