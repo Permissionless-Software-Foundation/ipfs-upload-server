@@ -18,6 +18,8 @@ before_install:
 
 # https://github.com/greenkeeperio/greenkeeper-lockfile/issues/156
 #install: case $TRAVIS_BRANCH in greenkeeper*) npm i;; *) npm ci;; esac;
+install:
+  - npm install
 
 script: "npm run test"
 
