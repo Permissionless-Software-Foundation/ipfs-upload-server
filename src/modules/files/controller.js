@@ -103,7 +103,7 @@ class FileController {
         walletPath = `${__dirname}/../../../config/wallet.json`
       }
 
-      file.hostingCost = fileFee
+      file.hostingCost = Math.floor(fileFee)
 
       // Get the HD index for the next wallet address.
       const walletData = await _this.util.readJSON(walletPath)
@@ -297,9 +297,9 @@ class FileController {
       ctx.body = {
         file
       }
-    } catch (error) {
+    } catch (err) {
       wlogger.error('Error in files/controller.js/updateFile(): ', err.message)
-      ctx.throw(422, error.message)
+      ctx.throw(422, err.message)
     }
   }
 
@@ -322,8 +322,8 @@ class FileController {
       // console.log(`fileMb : ${fileMb}`)
 
       let feeInUSD // file fee in usd
-      let feeInBCH // file fee in bch
-      let feeInSAT // file fee in satoshis
+      // let feeInBCH // file fee in bch
+      // let feeInSAT // file fee in satoshis
 
       if (fileMb <= 10) {
         feeInUSD = feePerMB * 10 // minimun fee is 0.01 USD
@@ -337,10 +337,10 @@ class FileController {
 
       // Calculating fees in bch
       const bchFee = feeInUSD / USDperBCH
-      feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
+      const feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
 
       // Calculating fees in satoshis
-      feeInSAT = await _this.bchjs.bchToSatoshis(bchFee)
+      const feeInSAT = await _this.bchjs.bchToSatoshis(bchFee)
       const feeData = {
         USD: feeInUSD,
         SAT: feeInSAT,
@@ -350,12 +350,12 @@ class FileController {
       // console.log(`feeData : ${JSON.stringify(feeData)}`)
 
       return feeData
-    } catch (error) {
+    } catch (err) {
       wlogger.error(
         'Error in files/controller.js/getHostingFee(): ',
         err.message
       )
-      throw error
+      throw err
     }
   }
 }

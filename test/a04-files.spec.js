@@ -417,6 +417,7 @@ describe('#Files', async function () {
 
       const result = await axios(options)
       const files = result.data.files
+      // console.log(`files: ${JSON.stringify(files, null, 2)}`)
 
       // Save this value for later tests.
       context.fileId = files[1]._id
@@ -738,24 +739,21 @@ describe('#Files', async function () {
       // assert.equal(file.userIdUpload, 'id user2')
     })
   })
+
   describe('getHostingFee', () => {
     it('should throw error  if fileBytes parameter is no include', async () => {
       try {
         await controller.getHostingFee()
         assert(false, 'Unexpected result')
       } catch (err) {
-        assert.include(
-          err.message,
-          'fileBytes must be a number'
-        )
+        assert.include(err.message, 'fileBytes must be a number')
       }
     })
+
     it('should return hosting fee', async () => {
       try {
         const fileSize = 1024
-        sandbox
-          .stub(controller.bchjs, 'getPrice')
-          .resolves(mockData.price)
+        sandbox.stub(controller.bchjs, 'getPrice').resolves(mockData.price)
 
         const result = await controller.getHostingFee(fileSize)
         // console.log(`result : ${JSON.stringify(result)}`)
