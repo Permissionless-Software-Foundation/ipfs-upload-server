@@ -19,7 +19,7 @@ const wlogger = require('../src/lib/wlogger')
 const BCHJSLIB = require('../src/lib/bch')
 const bchjsLib = new BCHJSLIB()
 
-async function startServer () {
+async function startServer() {
   // Create a Koa instance.
   const app = new Koa()
   app.keys = [config.session]
@@ -82,7 +82,15 @@ const tryCreateWallet = async () => {
   try {
     const walletPath = `${__dirname}/../config/wallet`
     await bchjsLib.createWallet(walletPath)
-  } catch (error) {}
+  } catch (error) {
+
+    if (error.message && error.message.includes('already exist'))
+      console.log("You have a wallet created already")
+    else
+      throw error
+
+
+  }
 }
 
 // startServer()

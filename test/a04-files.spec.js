@@ -54,10 +54,8 @@ describe('#Files', async function () {
                                 }
                             }
                         }
-
                         await axios(options)
                         // console.log(`result stringified: ${JSON.stringify(result, null, 2)}`)
-
                         assert(false, 'Unexpected result')
                     } catch (err) {
                         assert(err.response.status === 401, 'Error code 401 expected.')
@@ -290,6 +288,11 @@ describe('#Files', async function () {
       assert.property(result.data.file, 'bchAddr')
       assert.property(result.data.file, 'hasBeenPaid')
       assert.property(result.data.file, 'walletIndex')
+
+      assert.isNumber(result.data.hostingCostUSD)
+      assert.isNumber(result.data.hostingCostBCH)
+
+
     })
 
     it('should create file with all inputs', async function () {
@@ -326,6 +329,9 @@ describe('#Files', async function () {
       assert.property(result.data.file, 'bchAddr')
       assert.property(result.data.file, 'hasBeenPaid')
       assert.property(result.data.file, 'walletIndex')
+
+      assert.isNumber(result.data.hostingCostUSD)
+      assert.isNumber(result.data.hostingCostBCH)
     })
   })
 
@@ -339,15 +345,12 @@ describe('#Files', async function () {
                                 Accept: 'application/json'
                             }
                         }
-
                         await axios(options)
-
                         assert.equal(true, false, 'Unexpected behavior')
                     } catch (err) {
                         assert.equal(err.response.status, 401)
                     }
                 })
-
                 it('should not fetch files if the authorization header is missing the scheme', async () => {
                     try {
                         const options = {
@@ -358,14 +361,12 @@ describe('#Files', async function () {
                                 Authorization: '1'
                             }
                         }
-
                         await axios(options)
                         assert.equal(true, false, 'Unexpected behavior')
                     } catch (err) {
                         assert.equal(err.response.status, 401)
                     }
                 })
-
         it('should not fetch file if the authorization header has invalid scheme', async () => {
             const { token } = context
             try {
@@ -377,14 +378,12 @@ describe('#Files', async function () {
                         Authorization: `Unknown ${token}`
                     }
                 }
-
                 await axios(options)
                 assert.equal(true, false, 'Unexpected behavior')
             } catch (err) {
                 assert.equal(err.response.status, 401)
             }
         })
-
         it('should not fetch file if token is invalid', async () => {
             try {
                 const options = {
@@ -395,7 +394,6 @@ describe('#Files', async function () {
                         Authorization: 'Bearer 1'
                     }
                 }
-
                 await axios(options)
                 assert.equal(true, false, 'Unexpected behavior')
             } catch (err) {
@@ -447,7 +445,6 @@ describe('#Files', async function () {
                                 Authorization: 'Bearer 1'
                             }
                         }
-
                         await axios(options)
                         assert.equal(true, false, 'Unexpected behavior')
                     } catch (err) {
@@ -519,7 +516,6 @@ describe('#Files', async function () {
                                 Authorization: 'Bearer 1'
                             }
                         }
-
                         await axios(options)
                         assert.equal(true, false, 'Unexpected behavior')
                     } catch (err) {
