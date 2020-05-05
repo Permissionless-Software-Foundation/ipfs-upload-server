@@ -1,6 +1,6 @@
 const axios = require('axios').default
 const assert = require('chai').assert
-const fs =  require('fs')
+const fs = require('fs')
 const sinon = require('sinon')
 
 // Mocking data libraries.
@@ -9,20 +9,19 @@ const mockData = require('./mocks/bchjs-mocks')
 const util = require('util')
 util.inspect.defaultOptions = { depth: 1 }
 
-const BCHJS = require('../src/lib/bch')
-const bchjs = new BCHJS()
+const BCHJSLIB = require('../src/lib/bch')
+const bchjsLib = new BCHJSLIB()
 
 const WALLET_NAME = 'wallet-test'
 const WALLET_PATH = `${__dirname}/../config/${WALLET_NAME}`
 const deleteFile = filepath => {
     try {
-      // Delete state if exist
-      fs.unlinkSync(filepath)
+        // Delete state if exist
+        fs.unlinkSync(filepath)
     } catch (error) {
-        console.log("ERROR",error)
     }
-  }
-  
+}
+
 
 
 describe('#BCH', async function () {
@@ -42,10 +41,10 @@ describe('#BCH', async function () {
         it('should get bch price in usd', async () => {
             try {
                 sandbox
-                    .stub(bchjs.axios, 'request')
+                    .stub(bchjsLib.axios, 'request')
                     .resolves(mockData.rates1)
 
-                const result = await bchjs.getPrice()
+                const result = await bchjsLib.getPrice()
                 //console.log(`result : ${JSON.stringify(result)}`)
                 assert.isString(result)
 
@@ -60,10 +59,10 @@ describe('#BCH', async function () {
 
             try {
                 sandbox
-                    .stub(bchjs.axios, 'request')
+                    .stub(bchjsLib.axios, 'request')
                     .resolves(mockData.rates2)
 
-                await bchjs.getPrice()
+                await bchjsLib.getPrice()
                 assert(false, 'Unexpected result')
 
             } catch (err) {
@@ -81,7 +80,7 @@ describe('#BCH', async function () {
 
             try {
 
-                await bchjs.createWallet()
+                await bchjsLib.createWallet()
                 assert(false, 'Unexpected result')
 
             } catch (err) {
@@ -96,19 +95,19 @@ describe('#BCH', async function () {
 
             try {
 
-                const walletData = await bchjs.createWallet(WALLET_PATH)
+                const walletData = await bchjsLib.createWallet(WALLET_PATH)
                 assert.hasAllKeys(walletData,
                     [
-                      'mnemonic',
-                      'cashAddress',
-                      'legacyAddress',
-                      'WIF',
-                      'network',
-                      'nextAddress',
-                      'derivation',
-                      'addresses'
+                        'mnemonic',
+                        'cashAddress',
+                        'legacyAddress',
+                        'WIF',
+                        'network',
+                        'nextAddress',
+                        'derivation',
+                        'addresses'
                     ]
-                  )
+                )
                 assert.isString(walletData.mnemonic)
                 assert.isString(walletData.cashAddress)
                 assert.isString(walletData.legacyAddress)
@@ -128,7 +127,7 @@ describe('#BCH', async function () {
 
             try {
 
-                await bchjs.createWallet(WALLET_PATH)
+                await bchjsLib.createWallet(WALLET_PATH)
                 assert(false, 'Unexpected result')
 
 
@@ -143,12 +142,12 @@ describe('#BCH', async function () {
     })
 
     describe('bchToSatoshis', () => {
-        it('Should throw error if bch  is not provided', async () => {
+        it('Should throw error if bch parameter is not provided', async () => {
 
-            try {   
+            try {
 
-                await bchjs.bchToSatoshis()
-                
+                await bchjsLib.bchToSatoshis()
+
                 assert(false, 'Unexpected result')
             } catch (err) {
                 assert.include(
@@ -160,16 +159,210 @@ describe('#BCH', async function () {
         })
         it('Should convert bch to satoshis', async () => {
 
-            try {   
+            try {
                 const bch = 1
-                const result = await bchjs.bchToSatoshis(bch)
+                const result = await bchjsLib.bchToSatoshis(bch)
                 assert.isNumber(result)
-                assert.equal(result , 100000000)
+                assert.equal(result, 100000000)
             } catch (err) {
                 assert(false, 'Unexpected result')
 
             }
         })
- 
+
+    })
+
+    describe('getBalance()', () => {
+        it('Should throw error if bch address is not provided', async () => {
+
+            try {
+
+                await bchjsLib.getBalance()
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "addr must be a string"
+                )
+
+            }
+        })
+
+
+    })
+    describe('getUtxos()', () => {
+        it('Should throw error if bch address is not provided', async () => {
+
+            try {
+
+                await bchjsLib.getUtxos()
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "addr must be a string"
+                )
+
+            }
+        })
+    })
+
+    describe('changeAddrFromMnemonic()', () => {
+        it('Should throw error if hd index is not provided', async () => {
+
+            try {
+
+                await bchjsLib.changeAddrFromMnemonic()
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "index must be a non-negative integer"
+                )
+
+            }
+        })
+    })
+    describe('isValidUtxo()', () => {
+
+    })
+
+    describe('sendAllAddr()', () => {
+        it('Should throw error if fromAddr parameter is not provided', async () => {
+
+            try {
+
+                await bchjsLib.sendAllAddr()
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "fromAddr must be a string"
+                )
+
+            }
+        })
+        it('Should throw error if hd index parameter is not provided', async () => {
+
+            try {
+                const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
+                await bchjsLib.sendAllAddr(fromAddr)
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "hdIndex must be a number"
+                )
+
+            }
+        })
+        it('Should throw error if toAddr parameter is not provided', async () => {
+
+            try {
+                const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
+                const hdIndex = 1
+                await bchjsLib.sendAllAddr(fromAddr, hdIndex)
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "toAddr must be a string"
+                )
+
+            }
+        })
+        describe('broadcastTx()', () => {
+            it('Should throw error if hex parameter is not provided', async () => {
+
+                try {
+
+                    await bchjsLib.broadcastTx()
+
+                    assert(false, 'Unexpected result')
+                } catch (err) {
+                    assert.include(
+                        err.message,
+                        "hex must be a string"
+                    )
+
+                }
+            })
+        })
+
+        describe('generateTransaction()', () => {
+            it('Should throw error if hd Index is not provided', async () => {
+
+                try {
+
+                    await bchjsLib.generateTransaction()
+
+                    assert(false, 'Unexpected result')
+                } catch (err) {
+                    assert.include(
+                        err.message,
+                        "hdIndex must be a number"
+                    )
+
+                }
+            })
+        })
+    })
+
+    describe('getElectrumxBalance()', () => {
+        it('Should throw error if address is not provided', async () => {
+
+            try {
+
+                await bchjsLib.getElectrumxBalance()
+
+                assert(false, 'Unexpected result')
+            } catch (err) {
+                assert.include(
+                    err.message,
+                    "address must be a string"
+                )
+
+            }
+        })
+        it('Should return balance ', async () => {
+
+            try {
+
+                sandbox
+                    .stub(bchjsLib.bchjs.Electrumx, 'balance')
+                    .resolves(mockData.electrumxBalance)
+
+
+                const addr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
+                const balanceResult = await bchjsLib.getElectrumxBalance(addr)
+               
+
+                assert.property(balanceResult,'success')    
+                assert.property(balanceResult,'balance')   
+
+                assert.property(balanceResult.balance,'confirmed') 
+                assert.property(balanceResult.balance,'unconfirmed') 
+
+                assert.isBoolean(balanceResult.success) 
+                   
+                assert.isNumber(balanceResult.balance.confirmed)    
+                assert.isNumber(balanceResult.balance.unconfirmed)   
+
+
+
+            } catch (err) {
+
+                assert(false, 'Unexpected result')
+
+
+            }
+        })
+
     })
 })

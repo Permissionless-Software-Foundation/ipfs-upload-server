@@ -32,9 +32,17 @@ const rates2 = {
         }
     }
 }
+const electrumxBalance = {
+    success: true,
+    balance: {
+        confirmed: 1000,
+        unconfirmed: 5000,
+    }
+}
 const bchjsMockData = {
     rates1,
-    rates2
+    rates2,
+    electrumxBalance
 }
 
 module.exports = bchjsMockData
