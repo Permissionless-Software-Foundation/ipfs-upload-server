@@ -263,7 +263,7 @@ describe('#Files', async function () {
         data: {
           file: {
             schemaVersion: 1,
-            size: 1
+            size: 1,
           }
         },
         headers: {
@@ -271,7 +271,7 @@ describe('#Files', async function () {
           Authorization: `Bearer ${context.adminJWT}`
         }
       }
-
+ 
       const result = await axios(options)
       // console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
 

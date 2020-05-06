@@ -81,7 +81,7 @@ async function startServer() {
     console.log('Starting Sweep')
     await bchjsLib.paymentsSweep()
     console.log('Sweep Done!')
-  }, 20000 * 2)
+  }, 60000 * 2)
 
   return app
 }

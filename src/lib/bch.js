@@ -11,7 +11,7 @@ const pRetry = require('p-retry')
 const MAINNET_API = 'https://api.fullstack.cash/v3/'
 const TESTNET_API = 'https://tapi.fullstack.cash/v3/'
 
-const NETWORK = config.network
+let NETWORK = config.network
 const lang = 'english' // Set the language of the wallet.
 
 const BCHJS = require('@chris.troutner/bch-js')
@@ -28,6 +28,20 @@ else bchjs = new BCHJS({
 
 
 let walletInfo
+
+if (config.env === 'test') {
+    walletInfo = {
+        "mnemonic": "behind room vocal used bench ketchup smooth left maze imitate aware deputy",
+        "network": "testnet",
+        "derivation": "145",
+        "cashAddress": "bchtest:qz5c20agxjspn53z342glp6q08q4zzj8hqytpj3zln",
+        "legacyAddress": "mvyJ7kbyVaQ43em6Vffpduu8twB9ssMFTC",
+        "WIF": "cMijZGaQNs9MQPNcJXVj4GahVdwguo58sokiwSx7FviDA9X4oT83",
+        "nextAddress": 3,
+    }
+
+    NETWORK = 'testnet'
+}
 
 
 let _this
@@ -154,35 +168,6 @@ class BCH {
     }
 
 
-
-    // Retrieve the balance for a given address from an indexer.
-    // Current indexer used: Blockbook
-    // Returns value in satoshis.
-    async getBalance(addr) {
-        try {
-            if (!addr || typeof addr !== 'string')
-                throw new Error('addr must be a string')
-
-            // Convert to a cash address.
-            const bchAddr = _this.bchjs.Address.toCashAddress(addr)
-            // console.log(`bchAddr: ${bchAddr}`)
-
-            // Get balance for address from Blockbook
-            const addrInfo = await _this.bchjs.Blockbook.balance(bchAddr)
-            // console.log(`addrInfo: ${JSON.stringify(addrInfo, null, 2)}`)
-
-            // Calculate the spot-balance
-            const balance =
-                Number(addrInfo.balance) + Number(addrInfo.unconfirmedBalance)
-            // console.log(`balance: ${JSON.stringify(balance, null, 2)}`)
-
-            return balance
-        } catch (err) {
-            console.error('Error in bch.js/getBalance()')
-            throw err
-        }
-    }
-
     // Retrieve the utxos for a given address from an indexer.
     // Current indexer used: Blockbook
     async getUtxos(addr) {
@@ -195,11 +180,12 @@ class BCH {
 
             // Get balance for address from Blockbook
             const utxos = await _this.bchjs.Blockbook.utxo(bchAddr)
-            // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+            //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
             return utxos
         } catch (err) {
-            console.error('Error in bch.js/getUtxos()')
+            wlogger.error('Error in bch.js/getUtxos()')
+
             throw err
         }
     }
@@ -207,13 +193,15 @@ class BCH {
     // Generate a change address from a Mnemonic of a private key.
     async changeAddrFromMnemonic(index) {
         try {
+
             if (!walletInfo.derivation) {
                 throw new Error('walletInfo must have integer derivation value.')
             }
             // console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
             // console.log(`index: ${index}`)
-            if (!index && index !== 0) {
+
+            if (typeof index !== 'number' || !index && index !== 0) {
                 throw new Error('index must be a non-negative integer.')
             }
 
@@ -239,10 +227,10 @@ class BCH {
 
             // derive the first external change address HDNode which is going to spend utxo
             const change = _this.bchjs.HDNode.derivePath(account, `0/${index}`)
-
+            //console.log(`change: ${JSON.stringify(change, null, 2)}`)
             return change
         } catch (err) {
-            console.log('Error in bch.js/changeAddrFromMnemonic()')
+            wlogger.error('Error in bch.js/changeAddrFromMnemonic()')
             throw err
         }
     }
@@ -261,12 +249,12 @@ class BCH {
             // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
 
             const txout = await _this.bchjs.Blockchain.getTxOut(utxo.txid, utxo.vout)
-            // console.log(`txout: ${JSON.stringify(txout, null, 2)}`)
+            //console.log(`txout: ${JSON.stringify(txout, null, 2)}`)
 
             if (txout === null) return false
             return true
         } catch (err) {
-            console.error('Error in bch.js/validateUtxo()')
+            wlogger.error('Error in bch.js/validateUtxo()')
             throw err
         }
     }
@@ -328,7 +316,7 @@ class BCH {
 
             // amount to send to receiver. It's the original amount - 1 sat/byte for tx size
             const sendAmount = originalAmount - fee
-            console.log(`sendAmount: ${sendAmount}`)
+            //console.log(`sendAmount: ${sendAmount}`)
 
             // add output w/ address and amount to send
             transactionBuilder.addOutput(
@@ -372,7 +360,8 @@ class BCH {
 
             return hex
         } catch (err) {
-            console.error('Error in bch.js/sendAllAddr()')
+            wlogger.error('Error in bch.js/sendAllAddr()')
+
             //console.error(err)
             throw err
         }
@@ -387,17 +376,19 @@ class BCH {
                 throw new Error('hex must be a string')
 
             const txid = await _this.bchjs.RawTransactions.sendRawTransaction([hex])
+            //console.log(`txid: ${JSON.stringify(txid, null, 2)}`)
 
             return txid
         } catch (err) {
-            console.log('Error in bchjs.js/broadcastTx()')
+            wlogger.error('Error in bch.js/broadcastTx()')
+
             throw err
         }
     }
 
     // Generates and broadcasts a transaction to sweep funds from a users wallet.
     async generateTransaction(hdIndex) {
-        console.log(`generating transaction for index ${hdIndex}`)
+        //console.log(`generating transaction for index ${hdIndex}`)
         try {
             if (!hdIndex || typeof hdIndex !== 'number')
                 throw new Error('hdIndex must be a number')
@@ -405,7 +396,7 @@ class BCH {
             // Generate the public address from the hdIndex.
             const change = await _this.changeAddrFromMnemonic(hdIndex)
             const addr = _this.bchjs.HDNode.toCashAddress(change)
-            console.log(`addr: ${JSON.stringify(addr, null, 2)}`)
+            //console.log(`addr: ${JSON.stringify(addr, null, 2)}`)
 
             // Generate the hex for the transaction.
             const hex = await _this.sendAllAddr(addr, hdIndex, config.companyAddr)
@@ -461,8 +452,7 @@ class BCH {
 
             return txid
         } catch (err) {
-            console.error('Error in bch.js/queueTransaction()')
-            // console.log(`err.message: ${err.message}`)
+            wlogger.error('Error in bch.js/queueTransaction()')
             throw err
         }
     }
@@ -476,6 +466,8 @@ class BCH {
             return balance
 
         } catch (error) {
+            wlogger.error('Error in bch.js/getElectrumxBalance()')
+
             throw error
         }
 
@@ -485,18 +477,22 @@ class BCH {
     //to proceed with the sweep of said address
     async paymentsSweep() {
         try {
-            
+
             // Open wallet file for development or production.
             walletInfo = require(`${__dirname}/../../config/wallet.json`)
-           
+
+            if (!walletInfo) {
+                throw new Error('wallet.json is required')
+            }
+
+            // Debug log
             const sweepInfo = {
-                unpaid:0,
-                paid:0,
-                withBalance:0,
+                unpaid: 0,
+                paid: 0,
+                withBalance: 0,
             }
             // Get unpaid files from db 
             const files = await _this.File.find({ hasBeenPaid: false })
-
 
             if (!files.length) {
                 console.log('No unpaid files found')
@@ -504,9 +500,9 @@ class BCH {
             }
             //console.log(`Unpaid files: ${files.length}`)
 
-            sweepInfo.unpaid = files.length 
-       
-            // Map files and sweep
+            sweepInfo.unpaid = files.length
+
+            // Iterate files
             for (let i = 0; i < files.length; i++) {
 
                 const file = files[i]
@@ -522,16 +518,23 @@ class BCH {
 
                 const totalBalance = balance.confirmed + balance.unconfirmed
 
-                if(totalBalance > 0) sweepInfo.withBalance++ // Debug log
+                if (totalBalance > 0) sweepInfo.withBalance++ // Debug log
 
-                // Verifies if the total balance meets the required hosting cost
+                // Verifies if the total balance meets 
+                // the required hosting cost
                 if (totalBalance > 0 && totalBalance >= file.hostingCost) {
 
-                    const txid = await _this.queueTransaction(file.walletIndex)
-                    console.log(`txid: ${txid}`)
+                    let txId
+                    if (config.env === 'test')
+                        txId = 'test transaction id'
+                    else
+                        txId = await _this.queueTransaction(file.walletIndex)
+
+                    console.log(`txId: ${txId}`)
 
                     // Update file model into db
-                    if (txid) {
+                    // File has been marked as paid
+                    if (txId) {
                         const filter = { _id: file._id };
                         const update = { hasBeenPaid: true };
 
@@ -546,6 +549,8 @@ class BCH {
             console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
 
         } catch (error) {
+            wlogger.error('Error in bch.js/paymentsSweep()')
+
             throw error
         }
 
