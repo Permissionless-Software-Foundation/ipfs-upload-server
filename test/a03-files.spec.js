@@ -17,6 +17,20 @@ const LOCALHOST = `http://localhost:${config.port}`
 
 const context = {}
 
+const BCHJSLIB = require('../src/lib/bch')
+const bchjsLib = new BCHJSLIB()
+
+const WALLET_NAME = 'wallet-test'
+const WALLET_PATH = `${__dirname}/../config/${WALLET_NAME}`
+
+const createWallet =async () =>{
+  try {
+    await bchjsLib.createWallet(WALLET_PATH)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 describe('#Files', async function () {
   let sandbox
 
@@ -34,6 +48,8 @@ describe('#Files', async function () {
     const adminJWT = await testUtils.getAdminJWT()
     // console.log(`adminJWT: ${adminJWT}`)
     context.adminJWT = adminJWT
+
+    createWallet()
   })
 
   // Restore the sandbox before each test.
@@ -263,7 +279,7 @@ describe('#Files', async function () {
         data: {
           file: {
             schemaVersion: 1,
-            size: 1
+            size: 1,
           }
         },
         headers: {
@@ -271,7 +287,7 @@ describe('#Files', async function () {
           Authorization: `Bearer ${context.adminJWT}`
         }
       }
-
+ 
       const result = await axios(options)
       // console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
 

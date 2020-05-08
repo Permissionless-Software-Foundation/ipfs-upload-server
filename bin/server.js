@@ -19,7 +19,7 @@ const wlogger = require('../src/lib/wlogger')
 const BCHJSLIB = require('../src/lib/bch')
 const bchjsLib = new BCHJSLIB()
 
-async function startServer() {
+async function startServer () {
   // Create a Koa instance.
   const app = new Koa()
   app.keys = [config.session]
@@ -31,7 +31,8 @@ async function startServer() {
     config.database,
     {
       useUnifiedTopology: true,
-      useNewUrlParser: true
+      useNewUrlParser: true,
+      useFindAndModify: false
     }
   )
 
@@ -74,6 +75,14 @@ async function startServer() {
   if (success) console.log('System admin user created.')
 
   await tryCreateWallet()
+
+  // sweep derivate addresses
+  setInterval(async function () {
+    console.log('Starting Sweep')
+    await bchjsLib.paymentsSweep()
+    console.log('Sweep Done!')
+  }, 60000 * 2)
+
   return app
 }
 
@@ -83,13 +92,7 @@ const tryCreateWallet = async () => {
     const walletPath = `${__dirname}/../config/wallet`
     await bchjsLib.createWallet(walletPath)
   } catch (error) {
-
-    if (error.message && error.message.includes('already exist'))
-      console.log("You have a wallet created already")
-    else
-      throw error
-
-
+    if (error.message && error.message.includes('already exist')) { console.log('You have a wallet created already') } else throw error
   }
 }
 
