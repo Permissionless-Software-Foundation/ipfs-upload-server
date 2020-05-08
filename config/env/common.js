@@ -9,6 +9,6 @@ module.exports = {
   network: 'testnet',
   feePerMb: 0.001,
   apiJwt: process.env.BCHJSTOKEN || '',
-  companyAddr: 'bchtest:qqkdz3t0qt76mwnu9d2uc4mmjq7lsc8drq6s74pr56'
+  companyAddr: 'bchtest:qrhth6acvw8rf37jcz4wwd9uu902enyfksjgk6e9yr'
 
 }
