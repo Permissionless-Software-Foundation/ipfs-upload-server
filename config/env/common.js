@@ -9,6 +9,7 @@ module.exports = {
   network: 'testnet',
   feePerMb: 0.001,
   apiJwt: process.env.BCHJSTOKEN || '',
-  companyAddr: 'bchtest:qrhth6acvw8rf37jcz4wwd9uu902enyfksjgk6e9yr'
-
+  companyAddr: 'bchtest:qrhth6acvw8rf37jcz4wwd9uu902enyfksjgk6e9yr',
+  temporalLogin: process.env.TEMPORAL_LOGIN ? process.env.TEMPORAL_LOGIN : '',
+  temporalPass: process.env.TEMPORAL_PASS ? process.env.TEMPORAL_PASS : ''
 }

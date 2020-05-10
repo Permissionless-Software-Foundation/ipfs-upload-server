@@ -52,6 +52,7 @@
     "p-retry": "^4.2.0",
     "passport-local": "^1.0.0",
     "slp-cli-wallet": "^2.0.3",
+    "temporal-js": "^2.0.0",
     "tus-node-server": "^0.3.2",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.0.0"
