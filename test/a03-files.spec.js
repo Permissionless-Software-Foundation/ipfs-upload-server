@@ -23,11 +23,11 @@ const bchjsLib = new BCHJSLIB()
 const WALLET_NAME = 'wallet-test'
 const WALLET_PATH = `${__dirname}/../config/${WALLET_NAME}`
 
-const createWallet =async () =>{
+const createWallet = async () => {
   try {
     await bchjsLib.createWallet(WALLET_PATH)
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
@@ -58,26 +58,6 @@ describe('#Files', async function () {
   afterEach(() => sandbox.restore())
 
   describe('POST - Create Files', () => {
-    /*         it('should reject File creation if no JWT provided', async () => {
-                    try {
-                        const options = {
-                            method: 'POST',
-                            url: `${LOCALHOST}/files`,
-                            data: {
-                                file: {
-                                    schemaVersion: 1,
-                                    size: 1,
-                                }
-                            }
-                        }
-                        await axios(options)
-                        // console.log(`result stringified: ${JSON.stringify(result, null, 2)}`)
-                        assert(false, 'Unexpected result')
-                    } catch (err) {
-                        assert(err.response.status === 401, 'Error code 401 expected.')
-                    }
-                })
-         */
     it('should reject empty File', async () => {
       try {
         const options = {
@@ -279,7 +259,7 @@ describe('#Files', async function () {
         data: {
           file: {
             schemaVersion: 1,
-            size: 1,
+            size: 1
           }
         },
         headers: {
@@ -287,7 +267,7 @@ describe('#Files', async function () {
           Authorization: `Bearer ${context.adminJWT}`
         }
       }
- 
+
       const result = await axios(options)
       // console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
 
@@ -307,8 +287,6 @@ describe('#Files', async function () {
 
       assert.isNumber(result.data.hostingCostUSD)
       assert.isNumber(result.data.hostingCostBCH)
-
-
     })
 
     it('should create file with all inputs', async function () {

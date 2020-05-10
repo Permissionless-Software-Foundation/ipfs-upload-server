@@ -70,6 +70,9 @@ class BCH {
       // Exit if the JWT has already been retrieved.
       if (_this.temporalJwt) return
 
+      // Exit if we are in a testing environment.
+      if (config.env === 'test') return
+
       // Throw up a warning if no login information has been provided.
       if (!_this.config.temporalLogin) {
         console.warn('Warning: No Temporal.cloud login info provided.')
@@ -163,7 +166,7 @@ class BCH {
       }
       outObj.derivation = '145'
       // HDNode of BIP44 account
-      outStr += `BIP44 Account: "m/44\'/${outObj.derivation}\'/0\'"\n`
+      outStr += `BIP44 Account: "m/44'/${outObj.derivation}'/0'"\n`
       const childNode = masterHDNode.derivePath(
         `m/44'/${outObj.derivation}'/0'/0/0`
       )

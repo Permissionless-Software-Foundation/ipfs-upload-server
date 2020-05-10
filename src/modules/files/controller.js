@@ -27,7 +27,7 @@ class FileController {
 
   /**
    * @api {post} /files Create a new File
-   * @apiPermission user
+   * @apiPermission public
    * @apiName CreateFile
    * @apiGroup Files
    *
@@ -129,7 +129,7 @@ class FileController {
         file
       }
     } catch (err) {
-      console.log(err)
+      console.log(err.message)
       ctx.throw(422, err.message)
     }
   }
