@@ -537,6 +537,9 @@ class BCH {
           // Update file model into db
           // File has been marked as paid
           if (txId) {
+            const temporalData = await _this.uploadToTemporal(file)
+            console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
+
             const filter = { _id: file._id }
             const update = { hasBeenPaid: true }
 
@@ -549,12 +552,36 @@ class BCH {
 
       // console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
       console.log(`Total unpaid files: ${sweepInfo.unpaid}`)
-      console.log(`Paid files found in this pass: ${sweepInfo.paid}`)
-      console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
+      if (sweepInfo) {
+        console.log(`Paid files found in this pass: ${sweepInfo.paid}`)
+      }
+      // console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
     } catch (error) {
       wlogger.error('Error in bch.js/paymentsSweep()')
 
       throw error
+    }
+  }
+
+  // Upload a file to the temporal.cloud server.
+  async uploadToTemporal (fileObj) {
+    try {
+      console.log(`fileObj: ${JSON.stringify(fileObj, null, 2)}`)
+      console.log(`directory: ${__dirname}`)
+
+      // Get the filename for the file to be uploaded.
+      const uppyFileId = fileObj.fileId
+      const tempSplit = uppyFileId.split('/')
+      const fileName = tempSplit[tempSplit.length - 1]
+      console.log(`fileName: ${fileName}`)
+
+      const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
+      console.log(`relFilePath: ${relFilePath}`)
+
+      return true
+    } catch (err) {
+      console.error('Error in bch.js/uploadToTemporal()')
+      throw err
     }
   }
 

@@ -78,9 +78,9 @@ async function startServer () {
 
   // sweep derivate addresses
   setInterval(async function () {
-    console.log('Starting Sweep')
+    // console.log('Starting Sweep')
     await bchjsLib.paymentsSweep()
-    console.log('Sweep Done!')
+    // console.log('Sweep Done!')
     console.log(' ')
     // }, 60000 * 2)
   }, 30000)

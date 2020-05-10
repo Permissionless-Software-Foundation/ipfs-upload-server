@@ -6,15 +6,11 @@ module.exports.routes = [
   {
     method: 'POST',
     route: '/',
-    handlers: [
-      file.addFile
-    ]
+    handlers: [file.addFile]
   },
   {
     method: 'PATCH',
     route: '/:id',
-    handlers: [
-      file.addFile
-    ]
+    handlers: [file.addFile]
   }
 ]
