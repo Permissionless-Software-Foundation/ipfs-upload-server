@@ -81,7 +81,9 @@ async function startServer () {
     console.log('Starting Sweep')
     await bchjsLib.paymentsSweep()
     console.log('Sweep Done!')
-  }, 60000 * 2)
+    console.log(' ')
+    // }, 60000 * 2)
+  }, 30000)
 
   return app
 }
@@ -92,7 +94,9 @@ const tryCreateWallet = async () => {
     const walletPath = `${__dirname}/../config/wallet`
     await bchjsLib.createWallet(walletPath)
   } catch (error) {
-    if (error.message && error.message.includes('already exist')) { console.log('You have a wallet created already') } else throw error
+    if (error.message && error.message.includes('already exist')) {
+      console.log('You have a wallet created already')
+    } else throw error
   }
 }
 

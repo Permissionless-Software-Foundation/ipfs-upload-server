@@ -515,7 +515,7 @@ class BCH {
         const resultBalance = await _this.getElectrumxBalance(addr)
 
         if (!resultBalance.success) {
-          throw new Error(`Failed to get balance ${addr}`)
+          throw new Error(`Failed to get balance for address ${addr}`)
         }
 
         const balance = resultBalance.balance
@@ -547,7 +547,10 @@ class BCH {
         }
       }
 
-      console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
+      // console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
+      console.log(`Total unpaid files: ${sweepInfo.unpaid}`)
+      console.log(`Paid files found in this pass: ${sweepInfo.paid}`)
+      console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
     } catch (error) {
       wlogger.error('Error in bch.js/paymentsSweep()')
 
