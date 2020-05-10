@@ -611,9 +611,11 @@ class BCH {
       const fileName = tempSplit[tempSplit.length - 1]
       console.log(`fileName: ${fileName}`)
 
+      // Compute the relative file path to the file to be uploaded.
       const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
       console.log(`relFilePath: ${relFilePath}`)
 
+      // Upload the file to Temporal.cloud.
       const hash = await _this.temporal.uploadPublicFile(
         fs.createReadStream(relFilePath),
         1
