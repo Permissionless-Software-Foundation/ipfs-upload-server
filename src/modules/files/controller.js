@@ -13,11 +13,10 @@ const getAddress = new GetAddress()
 
 const util = require('../../lib/utils/json-files')
 
-
 let _this
 
 class FileController {
-  constructor() {
+  constructor () {
     _this = this
     this.File = File
     this.config = config
@@ -60,7 +59,7 @@ class FileController {
    *     }
    */
 
-  async createFile(ctx) {
+  async createFile (ctx) {
     try {
       const file = new _this.File(ctx.request.body.file)
 
@@ -95,7 +94,6 @@ class FileController {
       let walletPath
       let feeResult
       if (config.env === 'test') {
-
         feeResult = {
           SAT: 1,
           BCH: 1,
@@ -103,16 +101,13 @@ class FileController {
         }
 
         walletPath = `${__dirname}/../../../config/wallet-test.json`
-
       } else {
         feeResult = await _this.getHostingFee(file.size)
 
         walletPath = `${__dirname}/../../../config/wallet.json`
-
       }
 
       file.hostingCost = feeResult.SAT
-
 
       // Get the HD index for the next wallet address.
       const walletData = await _this.util.readJSON(walletPath)
@@ -124,9 +119,9 @@ class FileController {
 
       await file.save()
 
-      const hostingCostBCH = feeResult.BCH   
+      const hostingCostBCH = feeResult.BCH
       const hostingCostUSD = Number(feeResult.USD.toFixed(2)) // Rounds and limit to 2 decimals
-    
+
       ctx.body = {
         success: true,
         hostingCostBCH,
@@ -166,7 +161,7 @@ class FileController {
    *     }
    *
    */
-  async getFiles(ctx) {
+  async getFiles (ctx) {
     try {
       const files = await _this.File.find({})
 
@@ -205,7 +200,7 @@ class FileController {
    *
    */
 
-  async getFile(ctx, next) {
+  async getFile (ctx, next) {
     try {
       const file = await _this.File.findById(ctx.params.id)
 
@@ -265,7 +260,7 @@ class FileController {
    *}
    *
    */
-  async updateFile(ctx) {
+  async updateFile (ctx) {
     try {
       // Values obtain from user request.
       // This variable is intended to validate the properties
@@ -314,23 +309,25 @@ class FileController {
   }
 
   // calculate hosting fee
-  async getHostingFee(fileBytes) {
-    let feePerMB = _this.config.feePerMb // fee USD per MB
+  async getHostingFee (fileBytes) {
+    const feePerMB = _this.config.feePerMb // fee USD per MB
     try {
-      if (!fileBytes || typeof fileBytes !== 'number')
+      if (!fileBytes || typeof fileBytes !== 'number') {
         throw new Error('fileBytes must be a number')
+      }
 
-      if (!feePerMB || typeof feePerMB !== 'number')
+      if (!feePerMB || typeof feePerMB !== 'number') {
         throw new Error('feePerMB config property must be a number')
+      }
 
-      //convert bytes to MB
+      // convert bytes to MB
       const fileKb = fileBytes / 1024
       const fileMb = fileKb / 1024
       // console.log(`fileMb : ${fileMb}`)
 
-      let feeInUSD  // file fee in usd
-      let feeInBCH  // file fee in bch
-      let feeInSAT  // file fee in satoshis
+      let feeInUSD // file fee in usd
+      // let feeInBCH // file fee in bch
+      // let feeInSAT // file fee in satoshis
 
       if (fileMb <= 10) {
         feeInUSD = feePerMB * 10 // minimun fee is 0.01 USD
@@ -344,21 +341,21 @@ class FileController {
 
       // Calculating fees in bch
       const bchFee = feeInUSD / USDperBCH
-      feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
+      const feeInBCH = Number(bchFee.toFixed(8)) // Rounds and limit to 8 decimals
 
       // Calculating fees in satoshis
-      feeInSAT = await _this.bchjs.bchToSatoshis(bchFee)
+      const feeInSAT = await _this.bchjs.bchToSatoshis(bchFee)
       const feeData = {
         USD: feeInUSD,
-        SAT: feeInSAT,
+        SAT: Math.floor(feeInSAT),
         BCH: feeInBCH
       }
 
-      //console.log(`feeData : ${JSON.stringify(feeData)}`)
+      // console.log(`feeData : ${JSON.stringify(feeData)}`)
 
       return feeData
-    }
-    catch (error) {
+    } catch (error) {
+      console.error('Error in files/controller.js/getHostingFee()')
       throw error
     }
   }

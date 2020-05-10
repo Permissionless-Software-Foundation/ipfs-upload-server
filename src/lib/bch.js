@@ -82,7 +82,9 @@ class BCH {
 
   async bchToSatoshis (bch) {
     try {
-      if (!bch || typeof bch !== 'number') { throw new Error('bch must be a number') }
+      if (!bch || typeof bch !== 'number') {
+        throw new Error('bch must be a number')
+      }
 
       const satoshis = await _this.bchjs.BitcoinCash.toSatoshi(bch)
 
@@ -171,7 +173,9 @@ class BCH {
   // Current indexer used: Blockbook
   async getUtxos (addr) {
     try {
-      if (!addr || typeof addr !== 'string') { throw new Error('addr must be a string') }
+      if (!addr || typeof addr !== 'string') {
+        throw new Error('addr must be a string')
+      }
       // Convert to a cash address.
       const bchAddr = _this.bchjs.Address.toCashAddress(addr)
       // console.log(`bchAddr: ${bchAddr}`)
@@ -259,11 +263,17 @@ class BCH {
   // Throws an address if the address at hdIndex does not match fromAddr.
   async sendAllAddr (fromAddr, hdIndex, toAddr) {
     try {
-      if (!fromAddr || typeof fromAddr !== 'string') { throw new Error('fromAddr must be a string') }
+      if (!fromAddr || typeof fromAddr !== 'string') {
+        throw new Error('fromAddr must be a string')
+      }
 
-      if (!hdIndex || typeof hdIndex !== 'number') { throw new Error('hdIndex must be a number') }
+      if (!hdIndex || typeof hdIndex !== 'number') {
+        throw new Error('hdIndex must be a number')
+      }
 
-      if (!toAddr || typeof toAddr !== 'string') { throw new Error('toAddr must be a string') }
+      if (!toAddr || typeof toAddr !== 'string') {
+        throw new Error('toAddr must be a string')
+      }
 
       const utxos = await _this.getUtxos(fromAddr)
       // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
@@ -365,7 +375,9 @@ class BCH {
   // or throws an error.
   async broadcastTx (hex) {
     try {
-      if (!hex || typeof hex !== 'string') { throw new Error('hex must be a string') }
+      if (!hex || typeof hex !== 'string') {
+        throw new Error('hex must be a string')
+      }
 
       const txid = await _this.bchjs.RawTransactions.sendRawTransaction([hex])
       // console.log(`txid: ${JSON.stringify(txid, null, 2)}`)
@@ -382,7 +394,9 @@ class BCH {
   async generateTransaction (hdIndex) {
     // console.log(`generating transaction for index ${hdIndex}`)
     try {
-      if (!hdIndex || typeof hdIndex !== 'number') { throw new Error('hdIndex must be a number') }
+      if (!hdIndex || typeof hdIndex !== 'number') {
+        throw new Error('hdIndex must be a number')
+      }
 
       // Generate the public address from the hdIndex.
       const change = await _this.changeAddrFromMnemonic(hdIndex)
@@ -419,7 +433,9 @@ class BCH {
   async queueTransaction (hdIndex) {
     // console.log(`hdIndex: ${hdIndex}`)
     try {
-      if (!hdIndex || typeof hdIndex !== 'number') { throw new Error('hdIndex must be a number') }
+      if (!hdIndex || typeof hdIndex !== 'number') {
+        throw new Error('hdIndex must be a number')
+      }
 
       // Wrap the call to generateTransaction into an async function.
       const run = async () => _this.generateTransaction(hdIndex)
@@ -449,7 +465,9 @@ class BCH {
 
   async getElectrumxBalance (address) {
     try {
-      if (!address || typeof address !== 'string') { throw new Error('address must be a string') }
+      if (!address || typeof address !== 'string') {
+        throw new Error('address must be a string')
+      }
 
       const balance = await _this.bchjs.Electrumx.balance(address)
       return balance
@@ -496,7 +514,9 @@ class BCH {
 
         const resultBalance = await _this.getElectrumxBalance(addr)
 
-        if (!resultBalance.success) { throw new Error(`Failed to get balance ${addr}`) }
+        if (!resultBalance.success) {
+          throw new Error(`Failed to get balance ${addr}`)
+        }
 
         const balance = resultBalance.balance
         // console.log(`${addr} balance :`, balance)
