@@ -575,7 +575,10 @@ class BCH {
             console.log(`File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`)
 
             const filter = { _id: file._id }
-            const update = { hasBeenPaid: true }
+            const update = {
+              hasBeenPaid: true,
+              payloadLink: temporalHash
+            }
 
             await _this.File.findOneAndUpdate(filter, update)
             sweepInfo.paid++
