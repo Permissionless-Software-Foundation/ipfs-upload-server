@@ -9,7 +9,7 @@ async function addFile (ctx) {
   if (!tusServer) ctx.throw(500)
 
   // Event triggers after file upload is complete.
-  tusServer.on(EVENTS.EVENT_UPLOAD_COMPLETE, async (event) => {
+  tusServer.on(EVENTS.EVENT_UPLOAD_COMPLETE, async event => {
     console.log('Upload Completed!')
     //   console.log(event)
     const fileName = event.file.id
@@ -17,7 +17,10 @@ async function addFile (ctx) {
     const metad = await tus.parseMetadataString(event.file.upload_metadata)
     console.log(metad.fileNameToEncrypt.decoded)
 
-    fs.renameSync(`uppy-files/${fileName}`, `uppy-files${metad.fileNameToEncrypt.decoded}`)
+    fs.renameSync(
+      `uppy-files/${fileName}`,
+      `uppy-files${metad.fileNameToEncrypt.decoded}`
+    )
   })
 
   return tusServer.handle(ctx.req, ctx.res)

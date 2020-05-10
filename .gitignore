@@ -71,5 +71,8 @@ config/wallet.json
 config/wallet-test-info.txt
 config/wallet-test.json
 
+ipfs-upload-server.sh
+
 !README.md
 !uppy-files/README.md
+

@@ -4,6 +4,7 @@ const config = require('../../config')
 const wlogger = require('./wlogger')
 const File = require('../models/files')
 const pRetry = require('p-retry')
+const Temporal = require('temporal-js')
 
 // REST API servers.
 const MAINNET_API = 'https://api.fullstack.cash/v3/'
@@ -52,8 +53,40 @@ class BCH {
     this.fs = fs
     this.File = File
     this.pRetry = pRetry
+    this.temporal = new Temporal(true)
+    this.config = config
 
     this.TIMEOUT = 1000 // timeout between intervals when retrying transactions.
+
+    // Log into Temporal and get a JWT token when app is started.
+    this.temporalJwt = ''
+    this.loginTemporal()
+  }
+
+  // This method is intended to be run at startup to log into temporal and fetch
+  // a JWT token.
+  async loginTemporal () {
+    try {
+      // Exit if the JWT has already been retrieved.
+      if (_this.temporalJwt) return
+
+      // Exit if we are in a testing environment.
+      if (config.env === 'test') return
+
+      // Throw up a warning if no login information has been provided.
+      if (!_this.config.temporalLogin) {
+        console.warn('Warning: No Temporal.cloud login info provided.')
+        return
+      }
+
+      // Log into temporal
+      const jwt = await _this.temporal.login(_this.config.temporalLogin, _this.config.temporalPass)
+      _this.temporalJwt = jwt
+
+      console.log('Successfully logged into Temporal.cloud')
+    } catch (err) {
+      console.error('Error in bch.js/loginTemporal()')
+    }
   }
 
   async getPrice () {
@@ -133,7 +166,7 @@ class BCH {
       }
       outObj.derivation = '145'
       // HDNode of BIP44 account
-      outStr += `BIP44 Account: "m/44\'/${outObj.derivation}\'/0\'"\n`
+      outStr += `BIP44 Account: "m/44'/${outObj.derivation}'/0'"\n`
       const childNode = masterHDNode.derivePath(
         `m/44'/${outObj.derivation}'/0'/0/0`
       )
@@ -537,6 +570,10 @@ class BCH {
           // Update file model into db
           // File has been marked as paid
           if (txId) {
+            const temporalHash = await _this.uploadToTemporal(file)
+            // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
+            console.log(`File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`)
+
             const filter = { _id: file._id }
             const update = { hasBeenPaid: true }
 
@@ -549,12 +586,45 @@ class BCH {
 
       // console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
       console.log(`Total unpaid files: ${sweepInfo.unpaid}`)
-      console.log(`Paid files found in this pass: ${sweepInfo.paid}`)
-      console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
+      if (sweepInfo) {
+        console.log(`Paid files found in this pass: ${sweepInfo.paid}`)
+      }
+      // console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
     } catch (error) {
       wlogger.error('Error in bch.js/paymentsSweep()')
 
       throw error
+    }
+  }
+
+  // Upload a file to the temporal.cloud server.
+  async uploadToTemporal (fileObj) {
+    try {
+      console.log(`fileObj: ${JSON.stringify(fileObj, null, 2)}`)
+      console.log(`directory: ${__dirname}`)
+
+      if (!_this.temporalJwt) throw new Error('No Temporal JWT is available.')
+
+      // Get the filename for the file to be uploaded.
+      const uppyFileId = fileObj.fileId
+      const tempSplit = uppyFileId.split('/')
+      const fileName = tempSplit[tempSplit.length - 1]
+      console.log(`fileName: ${fileName}`)
+
+      // Compute the relative file path to the file to be uploaded.
+      const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
+      console.log(`relFilePath: ${relFilePath}`)
+
+      // Upload the file to Temporal.cloud.
+      const hash = await _this.temporal.uploadPublicFile(
+        fs.createReadStream(relFilePath),
+        1
+      )
+
+      return hash
+    } catch (err) {
+      console.error('Error in bch.js/uploadToTemporal()')
+      throw err
     }
   }
 
