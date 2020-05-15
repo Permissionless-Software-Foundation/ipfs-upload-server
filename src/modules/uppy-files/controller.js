@@ -11,15 +11,21 @@ async function addFile (ctx) {
   // Event triggers after file upload is complete.
   tusServer.on(EVENTS.EVENT_UPLOAD_COMPLETE, async event => {
     console.log('Upload Completed!')
-    //   console.log(event)
-    const fileName = event.file.id
+    // console.log(event)
+
+    // This is the name of the file uppy will create on the server.
+    const fileId = event.file.id
 
     const metad = await tus.parseMetadataString(event.file.upload_metadata)
-    console.log(metad.fileNameToEncrypt.decoded)
+    // console.log(`metad: ${JSON.stringify(metad, null, 2)}`)
 
+    // This is the original file name of the file the user uploaded.
+    const fileName = metad.name.decoded
+
+    // Rename the uppy-assigned filename to the original file name.
     fs.renameSync(
-      `uppy-files/${fileName}`,
-      `uppy-files${metad.fileNameToEncrypt.decoded}`
+      `uppy-files/${fileId}`,
+      `uppy-files/${fileName}`
     )
   })
 
