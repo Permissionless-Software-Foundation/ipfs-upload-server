@@ -23,10 +23,7 @@ async function addFile (ctx) {
     const fileName = metad.name.decoded
 
     // Rename the uppy-assigned filename to the original file name.
-    fs.renameSync(
-      `uppy-files/${fileId}`,
-      `uppy-files/${fileName}`
-    )
+    fs.renameSync(`uppy-files/${fileId}`, `uppy-files/${fileName}`)
   })
 
   return tusServer.handle(ctx.req, ctx.res)
