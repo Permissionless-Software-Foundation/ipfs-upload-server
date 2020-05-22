@@ -27,7 +27,7 @@
   },
   "repository": "Permissionless-Software-Foundation/ipfs-upload-server",
   "dependencies": {
-    "@chris.troutner/bch-js": "^2.3.16",
+    "@chris.troutner/bch-js": "^2.5.0",
     "apidoc": "^0.22.0",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
@@ -47,7 +47,7 @@
     "mongoose": "^5.7.5",
     "p-retry": "^4.2.0",
     "passport-local": "^1.0.0",
-    "slp-cli-wallet": "^2.0.3",
+    "slp-cli-wallet": "^2.0.5",
     "temporal-js": "^2.0.0",
     "tus-node-server": "^0.3.2",
     "winston": "^3.2.1",

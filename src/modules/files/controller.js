@@ -1,5 +1,8 @@
 /**
  * Controller class for file enpoints
+ *
+ * TODO:
+ * - Throw an error if the file does not exist for the filename.
  */
 
 const File = require('../../models/files')

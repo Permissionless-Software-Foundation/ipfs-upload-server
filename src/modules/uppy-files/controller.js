@@ -36,6 +36,13 @@ async function addFile (ctx) {
         await tus.deleteFile(fileName)
       }
 
+      // Verify the actual upload size is less than 110% of the size reported
+      // when the model was reported. This prevents people from gaming the
+      // system by reporting a small file, then uploading a large file.
+      if (event.file.upload_length > file.size * 1.1) {
+        await tus.deleteFile(fileName)
+      }
+
       // Rename file so it matches the users original file name.
       if (originalFileName) {
         fs.renameSync(
