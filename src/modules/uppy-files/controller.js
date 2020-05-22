@@ -3,6 +3,7 @@ const EVENTS = require('tus-node-server').EVENTS
 const File = require('../../models/files')
 const fs = require('fs')
 const tus = new TUS()
+const wlogger = require('../../lib/wlogger')
 
 // Handles the file upload.
 async function addFile (ctx) {
@@ -42,6 +43,9 @@ async function addFile (ctx) {
       if (event.file.upload_length > file.size * 1.1) {
         await tus.deleteFile(fileName)
       }
+
+      // Write data to the logs
+      wlogger.info(`${metad.name.decoded} upload with ID ${file._id} and size of ${event.file.upload_length} bytes`)
 
       // Rename file so it matches the users original file name.
       if (originalFileName) {
