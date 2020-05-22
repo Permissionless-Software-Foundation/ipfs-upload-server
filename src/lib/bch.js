@@ -574,6 +574,9 @@ class BCH {
             // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
             console.log(`File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`)
 
+            // Write the data to the logs.
+            wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
+
             const filter = { _id: file._id }
             const update = {
               hasBeenPaid: true,
@@ -594,9 +597,7 @@ class BCH {
       }
       // console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
     } catch (error) {
-      wlogger.error('Error in bch.js/paymentsSweep()')
-
-      throw error
+      wlogger.error('Error in bch.js/paymentsSweep(): ', error)
     }
   }
 
