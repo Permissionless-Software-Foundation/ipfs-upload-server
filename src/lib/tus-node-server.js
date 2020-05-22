@@ -5,7 +5,7 @@
 
 const tus = require('tus-node-server')
 const tusServer = new tus.Server()
-
+const fs = require('fs')
 let _this
 class TUS {
     constructor(path) {
@@ -14,11 +14,11 @@ class TUS {
         _this = this
         // By default make path an empty string.
         _this.filesPath = ''
-
+        _this.fs = fs
         // If user specified a path to use, use that.
         path && path !== ''
             ? (_this.filesPath = path)
-            : (_this.filesPath = '/uppy-files')
+            : (_this.filesPath = 'uppy-files')
     }
 
     async server() {
@@ -27,7 +27,7 @@ class TUS {
         }
         try {
             _this.tusServer.datastore = new tus.FileStore({
-                path: _this.filesPath
+                path: `/${_this.filesPath}`
             })
 
             return _this.tusServer
@@ -54,6 +54,30 @@ class TUS {
 
             return metadata
         }, {})
+    }
+
+    // Function to delete  file
+    async deleteFile(fileName) {
+        return new Promise((resolve, reject) => {
+            try {
+                // Input Validation
+                if (!fileName || typeof fileName !== 'string') {
+                    throw new Error('fileName must be a string!')
+                }
+                const path = `${_this.filesPath}/${fileName}`
+                if (!_this.fs.existsSync(path)) {
+                    throw reject(new Error('no such file or directory'))
+                }
+
+                _this.fs.unlink(path, err => {
+                    if (err) throw reject(new Error(false))
+                    resolve(true)
+                })
+            } catch (err) {
+                console.log(err)
+                return reject(err)
+            }
+        })
     }
 }
 

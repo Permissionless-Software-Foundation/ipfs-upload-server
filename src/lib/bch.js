@@ -609,9 +609,10 @@ class BCH {
       if (!_this.temporalJwt) throw new Error('No Temporal JWT is available.')
 
       // Get the filename for the file to be uploaded.
-      const uppyFileId = fileObj.fileId
-      const tempSplit = uppyFileId.split('/')
-      const fileName = tempSplit[tempSplit.length - 1]
+      // const uppyFileId = fileObj.fileId
+      // const tempSplit = uppyFileId.split('/')
+      // const fileName = tempSplit[tempSplit.length - 1]
+      const fileName = fileObj.fileName
       console.log(`fileName: ${fileName}`)
 
       // Compute the relative file path to the file to be uploaded.
