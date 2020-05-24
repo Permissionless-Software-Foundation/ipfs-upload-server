@@ -14,7 +14,8 @@ const File = new mongoose.Schema({
   hostingCost: { type: Number }, // Value in satoshis of the hosting cost for this file.
   fileId: { type: String }, // FileID assigned to the file by Uppy.
   fileName: { type: String }, // Original filename of the file before being uploaded to Uppy.
-  fileExtension: { type: String } // The extension as detected by Uppy.
+  fileExtension: { type: String }, // The extension as detected by Uppy.
+  isArchived: { type: Boolean, default: false } // File state
 })
 
 module.exports = mongoose.model('file', File)
