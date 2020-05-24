@@ -8,6 +8,7 @@ const tusServer = new tus.Server()
 const fs = require('fs')
 
 const File = require('../models/files')
+const wlogger = require('./wlogger')
 
 let _this
 class TUS {
@@ -154,8 +155,8 @@ class TUS {
         }
       }
 
-      console.log(`files  : ${filesArray.length} `)
-      console.log(`filesDeleted : ${filesDeleted} `)
+      wlogger.info(`files  : ${filesArray.length} `)
+      wlogger.info(`filesDeleted : ${filesDeleted} `)
     } catch (err) {
       console.log(err)
       throw err

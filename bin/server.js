@@ -79,7 +79,9 @@ async function startServer () {
 
   await tryCreateWallet()
 
+  // Cleanup the files every 24 hours.
   setInterval(async () => {
+    wlogger.info('Cleaning up files...')
     await tusLib.cleanUp()
   }, 60000 * 60 * 24)
 
