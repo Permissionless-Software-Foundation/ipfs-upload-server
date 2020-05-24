@@ -19,6 +19,9 @@ const wlogger = require('../src/lib/wlogger')
 const BCHJSLIB = require('../src/lib/bch')
 const bchjsLib = new BCHJSLIB()
 
+const TUSLIB = require('../src/lib/tus-node-server')
+const tusLib = new TUSLIB()
+
 async function startServer () {
   // Create a Koa instance.
   const app = new Koa()
@@ -75,6 +78,10 @@ async function startServer () {
   if (success) console.log('System admin user created.')
 
   await tryCreateWallet()
+
+  setInterval(async () => {
+    await tusLib.cleanUp()
+  }, 60000 * 60 * 24)
 
   // sweep derivate addresses
   setInterval(async function () {
