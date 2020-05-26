@@ -55,12 +55,13 @@ class BCH {
     this.pRetry = pRetry
     this.temporal = new Temporal(true)
     this.config = config
-
     this.TIMEOUT = 1000 // timeout between intervals when retrying transactions.
+    this.TIMEOUT_RENEW = 60000 * 60 * 2 // timeout to renew temporal jwt
 
     // Log into Temporal and get a JWT token when app is started.
     this.temporalJwt = ''
     this.loginTemporal()
+    this.renewTemporalJWT()
   }
 
   // This method is intended to be run at startup to log into temporal and fetch
@@ -479,9 +480,9 @@ class BCH {
           // Log failed attempt.
           console.log(
             `Attempt ${
-              error.attemptNumber
+            error.attemptNumber
             } to sweep HD index ${hdIndex} failed. There are ${
-              error.retriesLeft
+            error.retriesLeft
             } retries left. Waiting ${_this.TIMEOUT} milliseconds.`
           )
           _this.sleep(_this.TIMEOUT)
@@ -635,6 +636,30 @@ class BCH {
 
   sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  // re logs in temporal to get a new JWT
+
+  async renewTemporalJWT () {
+    setInterval(async () => {
+      try {
+        // Exit if we are in a testing environment.
+        if (config.env === 'test') return
+
+        // Throw up a warning if no login information has been provided.
+        if (!_this.config.temporalLogin) {
+          console.warn('Warning: No Temporal.cloud login info provided.')
+          return
+        }
+
+        // Log into temporal
+        const jwt = await _this.temporal.login(_this.config.temporalLogin, _this.config.temporalPass)
+        _this.temporalJwt = jwt
+        // console.log(`New Temporal JWT ${JSON.stringify(jwt, null, 2)}`)
+      } catch (error) {
+        console.error('Error in bch.js/renewTemporalJWT()')
+      }
+    }, _this.TIMEOUT_RENEW)
   }
 }
 
