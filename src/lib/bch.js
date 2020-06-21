@@ -14,6 +14,15 @@ const TESTNET_API = 'https://tapi.fullstack.cash/v3/'
 let NETWORK = config.network
 const lang = 'english' // Set the language of the wallet.
 
+// Instantiate the JWT handling library for FullStack.cash.
+const JwtLib = require('jwt-bch-lib')
+const jwtLib = new JwtLib({
+  // Overwrite default values with the values in the config file.
+  server: 'https://auth.fullstack.cash',
+  login: process.env.FULLSTACKLOGIN,
+  password: process.env.FULLSTACKPASS
+})
+
 const BCHJS = require('@chris.troutner/bch-js')
 let bchjs
 if (NETWORK === 'mainnet') {
@@ -63,6 +72,50 @@ class BCH {
     this.temporalJwt = ''
     this.loginTemporal()
     this.renewTemporalJWT()
+
+    // Renew the JWT token every 24 hours
+    setInterval(async function () {
+      wlogger.info('Updating FullStack.cash JWT token')
+      await _this.getJwt()
+    }, 60000 * 60 * 24)
+    _this.getJwt()
+  }
+
+  // Get's a JWT token from FullStack.cash.
+  // This code based on the jwt-bch-demo:
+  // https://github.com/Permissionless-Software-Foundation/jwt-bch-demo
+  async getJwt () {
+    try {
+      // Log into the auth server.
+      await jwtLib.register()
+
+      let apiToken = jwtLib.userData.apiToken
+
+      // Ensure the JWT token is valid to use.
+      const isValid = await jwtLib.validateApiToken()
+
+      // Get a new token with the same API level, if the existing token is not
+      // valid (probably expired).
+      if (!isValid.isValid) {
+        apiToken = await jwtLib.getApiToken(jwtLib.userData.apiLevel)
+        wlogger.info('The JWT token was not valid. Retrieved new JWT token.\n')
+      } else {
+        wlogger.info('JWT token is valid.\n')
+      }
+
+      // Set the environment variable.
+      process.env.BCHJSTOKEN = apiToken
+
+      // Reinstantiate bchjs library so that it uses the new JWT token.
+      if (config.network === 'testnet') {
+        _this.bchjs = new BCHJS({ restURL: 'http://tapi.fullstack.cash/v3/' })
+      } else {
+        _this.bchjs = new BCHJS()
+      }
+    } catch (err) {
+      wlogger.error('Error in bch.js/getJwt(): ', err)
+      throw err
+    }
   }
 
   // This method is intended to be run at startup to log into temporal and fetch
