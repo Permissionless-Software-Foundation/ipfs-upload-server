@@ -716,8 +716,8 @@ class BCH {
     }, _this.TIMEOUT_RENEW)
   }
 
-  // Verifica el saldo de un archivo en especifico , y lo marca
-  // como pagado si cumple con el costo de almacenamiento
+  // Verifies the balance of an specific file a check it as
+  // paid if cover the hosting fee
   async checkPaidFile (fileId) {
     try {
       if (!fileId) {
@@ -734,7 +734,7 @@ class BCH {
         throw new Error(' File not found')
       }
 
-      // Retorna los datos el archivo si ya ha sido pagado y hosteado
+      // return file data if its paid and hosted
       if (file.hasBeenPaid && file.payloadLink) return file
 
       const addr = file.bchAddr
