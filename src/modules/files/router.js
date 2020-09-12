@@ -27,6 +27,16 @@ module.exports.routes = [
   },
   {
     method: 'GET',
+    route: '/check/:id',
+    handlers: [
+      // Only logged-in users can get payload details..
+      // validator.ensureUser,
+      controller.getFile,
+      controller.checkPaidFile
+    ]
+  },
+  {
+    method: 'GET',
     route: '/:id',
     handlers: [
       // Only logged-in users can get payload details..
