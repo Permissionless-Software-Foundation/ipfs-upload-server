@@ -759,4 +759,58 @@ describe('#Files', async function () {
       }
     })
   })
+
+  describe('GET /files/check/:id', () => {
+    it("should throw 404 if files doesn't exist", async () => {
+      const token = context.testUser.token
+
+      try {
+        const options = {
+          method: 'GET',
+          url: `${LOCALHOST}/files/check/1`,
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        }
+
+        await axios(options)
+        assert.equal(true, false, 'Unexpected behavior')
+      } catch (err) {
+        assert.equal(err.response.status, 404)
+      }
+    })
+
+    it('should check file', async () => {
+      const token = context.testUser.token
+      const id = context.fileId
+
+      const options = {
+        method: 'GET',
+        url: `${LOCALHOST}/files/${id}`,
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      }
+
+      const result = await axios(options)
+      // console.log(`result.data:  ${JSON.stringify(result.data, null, 2)}`)
+
+      const file = result.data.file
+
+      assert.equal(file._id, id)
+
+      assert.property(file, '_id')
+      assert.property(file, 'schemaVersion')
+      assert.property(file, 'createdTimestamp')
+      assert.property(file, 'size')
+      assert.property(file, 'hostingCost')
+      assert.property(file, 'bchAddr')
+      assert.property(file, 'hasBeenPaid')
+      assert.property(file, 'walletIndex')
+      assert.property(file, 'schemaVersion')
+      assert.property(file, 'createdTimestamp')
+    })
+  })
 })

@@ -21,7 +21,7 @@ const deleteFile = filepath => {
   try {
     // Delete state if exist
     fs.unlinkSync(filepath)
-  } catch (error) {}
+  } catch (error) { }
 }
 
 describe('#BCH', async function () {
@@ -92,8 +92,7 @@ describe('#BCH', async function () {
         assert.isNumber(walletData.nextAddress)
         assert.isArray(walletData.addresses)
       } catch (err) {
-        throw err
-        // assert(false, 'Unexpected result')
+        assert(false, 'Unexpected result')
       }
     })
     it('Should throw error if wallet already exist', async () => {
@@ -413,7 +412,73 @@ describe('#BCH', async function () {
       }
     })
   })
+  describe('checkPaidFile()', () => {
+    it('Should throw error if fileId property is not included', async () => {
+      try {
+        await bchjsLib.checkPaidFile()
+        assert(false, 'Unexpected result')
+      } catch (err) {
+        assert.include(err.message, 'fileId is required')
+      }
+    })
+    it('Should throw an error if the file doesnt exist', async () => {
+      try {
+        await bchjsLib.checkPaidFile(123456)
+        assert(false, 'Unexpected result')
+      } catch (err) {
+        assert.include(err.message, 'Cast to ObjectId failed')
+      }
+    })
+    it('Should not update the file model if the balance is less than the hosting cost', async () => {
+      try {
+        sandbox
+          .stub(bchjsLib.bchjs.Electrumx, 'balance')
+          .resolves(mockData.NegativeElectrumxBalance)
 
+        const files = await File.find({ hasBeenPaid: false })
+
+        const file = files[0]
+
+        await bchjsLib.checkPaidFile(file._id)
+
+        const file2 = await File.findById(file._id)
+
+        assert.property(file2, 'hasBeenPaid')
+        assert.property(file2, 'payloadLink')
+
+        assert.isFalse(file2.hasBeenPaid)
+        assert.isString(file2.payloadLink)
+      } catch (err) {
+        assert(false, 'Unexpected result')
+      }
+    })
+
+    it('Should update the file model if the balance is greater than the hosting cost', async () => {
+      try {
+        sandbox
+          .stub(bchjsLib.bchjs.Electrumx, 'balance')
+          .resolves(mockData.PositiveElectrumxBalance)
+
+        sandbox.stub(bchjsLib, 'uploadToTemporal').resolves('test-hash')
+
+        const files = await File.find({ hasBeenPaid: false })
+
+        const file = files[0]
+
+        await bchjsLib.checkPaidFile(file._id)
+
+        const file2 = await File.findById(file._id)
+
+        assert.property(file2, 'hasBeenPaid')
+        assert.property(file2, 'payloadLink')
+
+        assert.isTrue(file2.hasBeenPaid)
+        assert.isString(file2.payloadLink)
+      } catch (err) {
+        assert(false, 'Unexpected result')
+      }
+    })
+  })
   describe('paymentsSweep()', () => {
     it('Should not update the file model if the balance is less than the hosting cost', async () => {
       try {

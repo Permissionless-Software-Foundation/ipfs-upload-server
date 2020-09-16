@@ -715,6 +715,64 @@ class BCH {
       }
     }, _this.TIMEOUT_RENEW)
   }
+
+  // Verifies the balance of an specific file a check it as
+  // paid if cover the hosting fee
+  async checkPaidFile (fileId) {
+    try {
+      if (!fileId) {
+        throw new Error('fileId is required')
+      }
+      // Open wallet file for development or production.
+      walletInfo = require(`${__dirname}/../../config/wallet.json`)
+      if (!walletInfo) {
+        throw new Error('wallet.json is required')
+      }
+
+      const file = await _this.File.findById(fileId)
+      if (!file) {
+        throw new Error(' File not found')
+      }
+
+      // return file data if its paid and hosted
+      if (file.hasBeenPaid && file.payloadLink) return file
+
+      const addr = file.bchAddr
+      const resultBalance = await _this.getElectrumxBalance(addr)
+
+      if (!resultBalance.success) {
+        throw new Error(`Failed to get balance for address ${addr}`)
+      }
+
+      const balance = resultBalance.balance
+      const totalBalance = balance.confirmed + balance.unconfirmed
+
+      // Verifies if the total balance meets
+      // the required hosting cost
+      if (totalBalance > 0 && totalBalance >= file.hostingCost) {
+        let txId
+        if (config.env === 'test') txId = 'test transaction id'
+        else txId = await _this.queueTransaction(file.walletIndex)
+
+        // Update file model into db
+        // File has been marked as paid
+        if (txId) {
+          const temporalHash = await _this.uploadToTemporal(file)
+          // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
+          console.log(`File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`)
+
+          file.hasBeenPaid = true
+          file.payloadLink = temporalHash
+
+          await file.save()
+        }
+      }
+      return file
+    } catch (error) {
+      console.error('Error in files/bch.js/checkPaidFile()')
+      throw error
+    }
+  }
 }
 
 module.exports = BCH
