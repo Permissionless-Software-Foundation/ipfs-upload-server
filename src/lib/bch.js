@@ -631,7 +631,8 @@ class BCH {
 
             // Write the data to the logs.
             wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
-
+            
+            // Asigning file as paid
             file.hasBeenPaid = true
             file.payloadLink = temporalHash
 
