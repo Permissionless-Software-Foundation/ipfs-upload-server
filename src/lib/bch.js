@@ -632,13 +632,11 @@ class BCH {
             // Write the data to the logs.
             wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
 
-            const filter = { _id: file._id }
-            const update = {
-              hasBeenPaid: true,
-              payloadLink: temporalHash
-            }
+            file.hasBeenPaid = true
+            file.payloadLink = temporalHash
 
-            await _this.File.findOneAndUpdate(filter, update)
+            await file.save()
+
             sweepInfo.paid++
             sweepInfo.unpaid--
           }
