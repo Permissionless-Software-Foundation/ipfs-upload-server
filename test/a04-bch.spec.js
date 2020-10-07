@@ -488,7 +488,7 @@ describe('#BCH', async function () {
     })
   })
 
-  describe('paymentsSweep()', () => {
+  describe('#paymentsSweep()', () => {
     it('Should not update the file model if the balance is less than the hosting cost', async () => {
       try {
         sandbox

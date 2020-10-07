@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "export IPFS_UPLOAD_ENV=test && npm run prep-test && nyc --reporter=text ./node_modules/.bin/mocha --timeout 15000 --exit",
-    "test:temp": "export IPFS_UPLOAD_ENV=test && npm run prep-test && ./node_modules/.bin/mocha --timeout 15000 --exit -g '#scanForPaidFiles'",
+    "test:temp": "export IPFS_UPLOAD_ENV=test && npm run prep-test && ./node_modules/.bin/mocha --timeout 15000 --exit -g '#paymentsSweep'",
     "lint": "standard --env mocha --fix",
     "docs": "./node_modules/.bin/apidoc -i src/ -o docs",
     "coverage": "nyc report --reporter=text-lcov | coveralls",

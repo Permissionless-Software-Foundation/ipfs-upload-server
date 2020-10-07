@@ -603,63 +603,101 @@ class BCH {
       }
       // console.log(`Unpaid files: ${files.length}`)
 
+      // Update the stats object.
       sweepInfo.unpaid = files.length
 
-      // Chunk the list of files into an array of 20-element arrays.
-      // const chunkedFiles = this.bchUtil.chunk20(files)
+      // Scan the blockchain for paid files, return an array of the files that
+      // have recieved a payment.
+      const paidFiles = await this.scanForPaidFiles(files)
 
-      // Iterate over all the unpaid files
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const addr = file.bchAddr
+      // Iterate over the paid files.
+      for (let i = 0; i < paidFiles.length; i++) {
+        const file = paidFiles[i]
 
-        const resultBalance = await _this.getElectrumxBalance(addr)
+        let txId
 
-        if (!resultBalance.success) {
-          throw new Error(`Failed to get balance for address ${addr}`)
+        // Handle unit tests differently.
+        if (config.env === 'test') txId = 'test transaction id'
+        // Production. Queue the sweep transaction to send the funds to the company wallet
+        else txId = await _this.queueTransaction(file.walletIndex)
+
+        console.log(`txId: ${txId}`)
+
+        // Update file model into db
+        // File has been marked as paid
+        if (txId) {
+          const temporalHash = await _this.uploadToTemporal(file)
+          // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
+          console.log(
+            `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+          )
+
+          // Write the data to the logs.
+          wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
+
+          // Asigning file as paid
+          file.hasBeenPaid = true
+          file.payloadLink = temporalHash
+
+          // Update the model in the database.
+          await file.save()
+
+          sweepInfo.paid++
+          sweepInfo.unpaid--
         }
 
-        const balance = resultBalance.balance
-        // console.log(`${addr} balance :`, balance)
-
-        const totalBalance = balance.confirmed + balance.unconfirmed
-
-        if (totalBalance > 0) sweepInfo.withBalance++ // Debug log
-
-        // Verifies if the total balance meets
-        // the required hosting cost
-        if (totalBalance > 0 && totalBalance >= file.hostingCost) {
-          let txId
-
-          // Handle unit tests differently.
-          if (config.env === 'test') txId = 'test transaction id'
-          // Production. Queue the sweep transaction to send the funds to the company wallet
-          else txId = await _this.queueTransaction(file.walletIndex)
-
-          console.log(`txId: ${txId}`)
-
-          // Update file model into db
-          // File has been marked as paid
-          if (txId) {
-            const temporalHash = await _this.uploadToTemporal(file)
-            // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
-            console.log(
-              `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
-            )
-
-            // Write the data to the logs.
-            wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
-
-            // Asigning file as paid
-            file.hasBeenPaid = true
-            file.payloadLink = temporalHash
-
-            await file.save()
-
-            sweepInfo.paid++
-            sweepInfo.unpaid--
-          }
-        }
+        // // Iterate over all the unpaid files
+        // for (let i = 0; i < files.length; i++) {
+        //   const file = files[i]
+        //   const addr = file.bchAddr
+        //
+        //   const resultBalance = await _this.getElectrumxBalance(addr)
+        //
+        //   if (!resultBalance.success) {
+        //     throw new Error(`Failed to get balance for address ${addr}`)
+        //   }
+        //
+        //   const balance = resultBalance.balance
+        //   // console.log(`${addr} balance :`, balance)
+        //
+        //   const totalBalance = balance.confirmed + balance.unconfirmed
+        //
+        //   if (totalBalance > 0) sweepInfo.withBalance++ // Debug log
+        //
+        //   // Verifies if the total balance meets
+        //   // the required hosting cost
+        //   if (totalBalance > 0 && totalBalance >= file.hostingCost) {
+        //     let txId
+        //
+        //     // Handle unit tests differently.
+        //     if (config.env === 'test') txId = 'test transaction id'
+        //     // Production. Queue the sweep transaction to send the funds to the company wallet
+        //     else txId = await _this.queueTransaction(file.walletIndex)
+        //
+        //     console.log(`txId: ${txId}`)
+        //
+        //     // Update file model into db
+        //     // File has been marked as paid
+        //     if (txId) {
+        //       const temporalHash = await _this.uploadToTemporal(file)
+        //       // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
+        //       console.log(
+        //         `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+        //       )
+        //
+        //       // Write the data to the logs.
+        //       wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
+        //
+        //       // Asigning file as paid
+        //       file.hasBeenPaid = true
+        //       file.payloadLink = temporalHash
+        //
+        //       await file.save()
+        //
+        //       sweepInfo.paid++
+        //       sweepInfo.unpaid--
+        //     }
+        //   }
       }
 
       // console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
@@ -670,8 +708,8 @@ class BCH {
       // console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
     } catch (error) {
       wlogger.error('Error in bch.js/paymentsSweep(): ', error)
-      console.log(`config.network: ${config.network}`)
-      console.log(`process.env.NETWORK: ${process.env.NETWORK}`)
+      // console.log(`config.network: ${config.network}`)
+      // console.log(`process.env.NETWORK: ${process.env.NETWORK}`)
     }
   }
 
@@ -704,7 +742,8 @@ class BCH {
           const thisFile = thisChunk[j]
 
           // Add the confirmed and unconfirmed balances.
-          const totalBalance = thisAddr.balance.confirmed + thisAddr.balance.unconfirmed
+          const totalBalance =
+            thisAddr.balance.confirmed + thisAddr.balance.unconfirmed
 
           // Add the file to the paidFiles array if the hosting costs have been paid.
           if (totalBalance > 0 && totalBalance >= thisFile.hostingCost) {
