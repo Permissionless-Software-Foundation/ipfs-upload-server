@@ -27,7 +27,7 @@
   },
   "repository": "Permissionless-Software-Foundation/ipfs-upload-server",
   "dependencies": {
-    "@chris.troutner/bch-js": "2.5.0",
+    "@psf/bch-js": "3.6.4",
     "apidoc": "^0.23.0",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
