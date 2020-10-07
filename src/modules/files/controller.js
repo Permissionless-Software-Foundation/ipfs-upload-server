@@ -362,6 +362,22 @@ class FileController {
       throw error
     }
   }
+
+  // calculate hosting fee
+  async checkPaidFile (ctx) {
+    try {
+      const file = await _this.bchjs.checkPaidFile(ctx.params.id)
+      ctx.body = {
+        file
+      }
+    } catch (err) {
+      console.error('Error in files/controller.js/checkPaidFile()')
+      if (err === 404 || err.name === 'CastError') {
+        ctx.throw(404)
+      }
+      ctx.throw(500, err.message)
+    }
+  }
 }
 
 module.exports = FileController

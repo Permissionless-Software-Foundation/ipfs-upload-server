@@ -80,7 +80,6 @@ class TUS {
           resolve(true)
         })
       } catch (err) {
-        console.log(err)
         return reject(err)
       }
     })
@@ -114,7 +113,7 @@ class TUS {
 
       return difference
     } catch (err) {
-      console.log(err)
+      wlogger.info('Error in files/tus-node-server.js/getDifferTime() ')
       throw err
     }
   }
@@ -158,7 +157,7 @@ class TUS {
       wlogger.info(`files  : ${filesArray.length} `)
       wlogger.info(`filesDeleted : ${filesDeleted} `)
     } catch (err) {
-      console.log(err)
+      wlogger.info('Error in files/tus-node-server.js/cleanUp() ')
       throw err
     }
   }
