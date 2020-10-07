@@ -696,7 +696,7 @@ class BCH {
 
         // Get the BCH balance for each address in the chunk.
         const rawBalances = await this.bchjs.Electrumx.balance(addresses)
-        console.log(`rawBalances: ${JSON.stringify(rawBalances, null, 2)}`)
+        // console.log(`rawBalances: ${JSON.stringify(rawBalances, null, 2)}`)
 
         // Loop through the list of balances.
         for (let j = 0; j < rawBalances.balances.length; j++) {
