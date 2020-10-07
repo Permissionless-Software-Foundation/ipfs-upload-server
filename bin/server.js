@@ -85,14 +85,14 @@ async function startServer () {
     await tusLib.cleanUp()
   }, 60000 * 60 * 24)
 
-  // sweep derivate addresses
+  // sweep derived addresses
   setInterval(async function () {
     // console.log('Starting Sweep')
     await bchjsLib.paymentsSweep()
     // console.log('Sweep Done!')
     console.log(' ')
-  }, 60000 * 2)
-  // }, 30000)
+  // }, 60000 * 2) // 2 minutes
+  }, 30000) // 30 seconds
 
   return app
 }

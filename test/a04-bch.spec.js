@@ -2,6 +2,7 @@
 const assert = require('chai').assert
 const fs = require('fs')
 const sinon = require('sinon')
+const BCHJS = require('@psf/bch-js')
 
 // Mocking data libraries.
 const mockData = require('./mocks/bchjs-mocks')
@@ -21,7 +22,7 @@ const deleteFile = filepath => {
   try {
     // Delete state if exist
     fs.unlinkSync(filepath)
-  } catch (error) { }
+  } catch (error) {}
 }
 
 describe('#BCH', async function () {
@@ -479,6 +480,7 @@ describe('#BCH', async function () {
       }
     })
   })
+
   describe('paymentsSweep()', () => {
     it('Should not update the file model if the balance is less than the hosting cost', async () => {
       try {
@@ -522,6 +524,24 @@ describe('#BCH', async function () {
       } catch (err) {
         assert(false, 'Unexpected result')
       }
+    })
+  })
+
+  describe('#scanForPaidFiles', () => {
+    it('should return files that have been paid', async () => {
+      // Override for testnet.
+      // const uut = new BCHJSLIB()
+      // uut.bchjs = new BCHJS({
+      //   restURL: 'https://tapi.fullstack.cash/v3/'
+      // })
+
+      // Mock the Electrumx response.
+      sandbox
+        .stub(bchjsLib.bchjs.Electrumx, 'balance')
+        .resolves(mockData.mockFileBalances)
+
+      const result = await bchjsLib.scanForPaidFiles(mockData.mockFiles)
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
     })
   })
 })
