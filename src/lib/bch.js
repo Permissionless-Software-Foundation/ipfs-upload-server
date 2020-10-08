@@ -1,7 +1,9 @@
+// Public npm libraries
 const axios = require('axios').default
 const fs = require('fs')
 const pRetry = require('p-retry')
 const Temporal = require('temporal-js')
+const BchUtil = require('bch-util')
 
 const config = require('../../config')
 const wlogger = require('./wlogger')
@@ -23,7 +25,7 @@ const jwtLib = new JwtLib({
   password: process.env.FULLSTACKPASS
 })
 
-const BCHJS = require('@chris.troutner/bch-js')
+const BCHJS = require('@psf/bch-js')
 let bchjs
 if (NETWORK === 'mainnet') {
   bchjs = new BCHJS({
@@ -65,8 +67,9 @@ class BCH {
     this.pRetry = pRetry
     this.temporal = new Temporal(true)
     this.config = config
-    this.TIMEOUT = 1000 // timeout between intervals when retrying transactions.
+    this.TIMEOUT = 5000 // timeout between intervals when retrying transactions.
     this.TIMEOUT_RENEW = 60000 * 60 * 2 // timeout to renew temporal jwt
+    this.bchUtil = new BchUtil()
 
     // Log into Temporal and get a JWT token when app is started.
     this.temporalJwt = ''
@@ -135,7 +138,10 @@ class BCH {
       }
 
       // Log into temporal
-      const jwt = await _this.temporal.login(_this.config.temporalLogin, _this.config.temporalPass)
+      const jwt = await _this.temporal.login(
+        _this.config.temporalLogin,
+        _this.config.temporalPass
+      )
       _this.temporalJwt = jwt
 
       console.log('Successfully logged into Temporal.cloud')
@@ -348,7 +354,7 @@ class BCH {
   }
 
   // Sends all funds from fromAddr to toAddr.
-  // Throws an address if the address at hdIndex does not match fromAddr.
+  // Throws an error if the address at hdIndex does not match fromAddr.
   async sendAllAddr (fromAddr, hdIndex, toAddr) {
     try {
       if (!fromAddr || typeof fromAddr !== 'string') {
@@ -452,6 +458,7 @@ class BCH {
       return hex
     } catch (err) {
       wlogger.error('Error in bch.js/sendAllAddr()')
+      console.error('Error in bch.js/sendAllAddr(): ', err)
 
       // console.error(err)
       throw err
@@ -509,7 +516,7 @@ class BCH {
         throw new pRetry.AbortError('No utxos found.')
       }
 
-      // console.error(`Error in generateTransaction: ${err.message}`)
+      console.error(`Error in generateTransaction: ${err.message}`)
       throw err
     }
   }
@@ -534,9 +541,9 @@ class BCH {
           // Log failed attempt.
           console.log(
             `Attempt ${
-            error.attemptNumber
+              error.attemptNumber
             } to sweep HD index ${hdIndex} failed. There are ${
-            error.retriesLeft
+              error.retriesLeft
             } retries left. Waiting ${_this.TIMEOUT} milliseconds.`
           )
           _this.sleep(_this.TIMEOUT)
@@ -556,11 +563,13 @@ class BCH {
       if (!address || typeof address !== 'string') {
         throw new Error('address must be a string')
       }
+      console.log(`address: ${address}`)
 
       const balance = await _this.bchjs.Electrumx.balance(address)
       return balance
     } catch (error) {
       wlogger.error('Error in bch.js/getElectrumxBalance()')
+      console.log(`_this.bchjs.restURL: ${_this.bchjs.restURL}`)
 
       throw error
     }
@@ -584,8 +593,10 @@ class BCH {
         paid: 0,
         withBalance: 0
       }
+
       // Get unpaid files from db
       const files = await _this.File.find({ hasBeenPaid: false })
+      console.log(`unpaid files: ${JSON.stringify(files, null, 2)}`)
 
       if (!files.length) {
         console.log('No unpaid files found')
@@ -593,54 +604,47 @@ class BCH {
       }
       // console.log(`Unpaid files: ${files.length}`)
 
+      // Update the stats object.
       sweepInfo.unpaid = files.length
 
-      // Iterate files
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const addr = file.bchAddr
+      // Scan the blockchain for paid files, return an array of the files that
+      // have recieved a payment.
+      const paidFiles = await this.scanForPaidFiles(files)
 
-        const resultBalance = await _this.getElectrumxBalance(addr)
+      // Iterate over the paid files.
+      for (let i = 0; i < paidFiles.length; i++) {
+        const file = paidFiles[i]
 
-        if (!resultBalance.success) {
-          throw new Error(`Failed to get balance for address ${addr}`)
-        }
+        let txId
 
-        const balance = resultBalance.balance
-        // console.log(`${addr} balance :`, balance)
+        // Handle unit tests differently.
+        if (config.env === 'test') txId = 'test transaction id'
+        // Production. Queue the sweep transaction to send the funds to the company wallet
+        else txId = await _this.queueTransaction(file.walletIndex)
 
-        const totalBalance = balance.confirmed + balance.unconfirmed
+        console.log(`txId: ${txId}`)
 
-        if (totalBalance > 0) sweepInfo.withBalance++ // Debug log
+        // Update file model into db
+        // File has been marked as paid
+        if (txId) {
+          const temporalHash = await _this.uploadToTemporal(file)
+          // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
+          console.log(
+            `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+          )
 
-        // Verifies if the total balance meets
-        // the required hosting cost
-        if (totalBalance > 0 && totalBalance >= file.hostingCost) {
-          let txId
-          if (config.env === 'test') txId = 'test transaction id'
-          else txId = await _this.queueTransaction(file.walletIndex)
+          // Write the data to the logs.
+          wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
 
-          console.log(`txId: ${txId}`)
+          // Asigning file as paid
+          file.hasBeenPaid = true
+          file.payloadLink = temporalHash
 
-          // Update file model into db
-          // File has been marked as paid
-          if (txId) {
-            const temporalHash = await _this.uploadToTemporal(file)
-            // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
-            console.log(`File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`)
+          // Update the model in the database.
+          await file.save()
 
-            // Write the data to the logs.
-            wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
-            
-            // Asigning file as paid
-            file.hasBeenPaid = true
-            file.payloadLink = temporalHash
-
-            await file.save()
-
-            sweepInfo.paid++
-            sweepInfo.unpaid--
-          }
+          sweepInfo.paid++
+          sweepInfo.unpaid--
         }
       }
 
@@ -652,6 +656,59 @@ class BCH {
       // console.log(`Addresses found with a balance (that was swept): ${sweepInfo.withBalance}`)
     } catch (error) {
       wlogger.error('Error in bch.js/paymentsSweep(): ', error)
+      // console.log(`config.network: ${config.network}`)
+      // console.log(`process.env.NETWORK: ${process.env.NETWORK}`)
+    }
+  }
+
+  // Check to see if any of the unpaid files listed in the database have been paid.
+  // Expects an array of file objects as input (from the Mongo database).
+  // Returns an array of file models that have been paid. Array will be empty if
+  // no payments are found.
+  async scanForPaidFiles (files) {
+    try {
+      // By default, return an empty array.
+      const paidFiles = []
+
+      // Chunk the list of files into an array of 20-element arrays.
+      const chunkedFiles = this.bchUtil.util.chunk20(files)
+
+      // Loop through each chunk (of 20 files/BCH addresses).
+      for (let i = 0; i < chunkedFiles.length; i++) {
+        const thisChunk = chunkedFiles[i]
+
+        // Extract just the BCH addresses.
+        const addresses = thisChunk.map(elem => elem.bchAddr)
+
+        // Get the BCH balance for each address in the chunk.
+        const rawBalances = await this.bchjs.Electrumx.balance(addresses)
+        // console.log(`rawBalances: ${JSON.stringify(rawBalances, null, 2)}`)
+
+        // Loop through the list of balances.
+        for (let j = 0; j < rawBalances.balances.length; j++) {
+          const thisAddr = rawBalances.balances[j]
+          const thisFile = thisChunk[j]
+
+          // Add the confirmed and unconfirmed balances.
+          const totalBalance =
+            thisAddr.balance.confirmed + thisAddr.balance.unconfirmed
+
+          // Add the file to the paidFiles array if the hosting costs have been paid.
+          if (totalBalance > 0 && totalBalance >= thisFile.hostingCost) {
+            // Mark how much BCH there is in the address to be swept. (It might be
+            // different than the required hosting cost.)
+            thisFile.bchToSweep = totalBalance
+
+            // Add the file object to the array of paid files.
+            paidFiles.push(thisFile)
+          }
+        }
+      }
+
+      return paidFiles
+    } catch (err) {
+      wlogger.error('Error in scanForPaidFiles(): ', err)
+      throw err
     }
   }
 
@@ -706,7 +763,10 @@ class BCH {
         }
 
         // Log into temporal
-        const jwt = await _this.temporal.login(_this.config.temporalLogin, _this.config.temporalPass)
+        const jwt = await _this.temporal.login(
+          _this.config.temporalLogin,
+          _this.config.temporalPass
+        )
         _this.temporalJwt = jwt
         // console.log(`New Temporal JWT ${JSON.stringify(jwt, null, 2)}`)
       } catch (error) {
@@ -758,7 +818,9 @@ class BCH {
         if (txId) {
           const temporalHash = await _this.uploadToTemporal(file)
           // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
-          console.log(`File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`)
+          console.log(
+            `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+          )
 
           file.hasBeenPaid = true
           file.payloadLink = temporalHash
