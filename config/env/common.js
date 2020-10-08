@@ -6,8 +6,8 @@
 module.exports = {
   port: process.env.PORT || 5001,
   logPass: 'test',
-  network: process.env.NETWORK ? process.env.NETWORK : 'testnet',
-  // network: 'mainnet',
+  // network: process.env.NETWORK ? process.env.NETWORK : 'testnet',
+  network: 'mainnet',
   feePerMb: 0.001,
   apiJwt: process.env.BCHJSTOKEN || '',
   // companyAddr: 'bchtest:qrhth6acvw8rf37jcz4wwd9uu902enyfksjgk6e9yr',

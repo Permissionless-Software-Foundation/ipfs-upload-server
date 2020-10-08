@@ -67,7 +67,7 @@ class BCH {
     this.pRetry = pRetry
     this.temporal = new Temporal(true)
     this.config = config
-    this.TIMEOUT = 1000 // timeout between intervals when retrying transactions.
+    this.TIMEOUT = 5000 // timeout between intervals when retrying transactions.
     this.TIMEOUT_RENEW = 60000 * 60 * 2 // timeout to renew temporal jwt
     this.bchUtil = new BchUtil()
 
@@ -354,7 +354,7 @@ class BCH {
   }
 
   // Sends all funds from fromAddr to toAddr.
-  // Throws an address if the address at hdIndex does not match fromAddr.
+  // Throws an error if the address at hdIndex does not match fromAddr.
   async sendAllAddr (fromAddr, hdIndex, toAddr) {
     try {
       if (!fromAddr || typeof fromAddr !== 'string') {
@@ -458,6 +458,7 @@ class BCH {
       return hex
     } catch (err) {
       wlogger.error('Error in bch.js/sendAllAddr()')
+      console.error('Error in bch.js/sendAllAddr(): ', err)
 
       // console.error(err)
       throw err
@@ -515,7 +516,7 @@ class BCH {
         throw new pRetry.AbortError('No utxos found.')
       }
 
-      // console.error(`Error in generateTransaction: ${err.message}`)
+      console.error(`Error in generateTransaction: ${err.message}`)
       throw err
     }
   }
@@ -645,59 +646,6 @@ class BCH {
           sweepInfo.paid++
           sweepInfo.unpaid--
         }
-
-        // // Iterate over all the unpaid files
-        // for (let i = 0; i < files.length; i++) {
-        //   const file = files[i]
-        //   const addr = file.bchAddr
-        //
-        //   const resultBalance = await _this.getElectrumxBalance(addr)
-        //
-        //   if (!resultBalance.success) {
-        //     throw new Error(`Failed to get balance for address ${addr}`)
-        //   }
-        //
-        //   const balance = resultBalance.balance
-        //   // console.log(`${addr} balance :`, balance)
-        //
-        //   const totalBalance = balance.confirmed + balance.unconfirmed
-        //
-        //   if (totalBalance > 0) sweepInfo.withBalance++ // Debug log
-        //
-        //   // Verifies if the total balance meets
-        //   // the required hosting cost
-        //   if (totalBalance > 0 && totalBalance >= file.hostingCost) {
-        //     let txId
-        //
-        //     // Handle unit tests differently.
-        //     if (config.env === 'test') txId = 'test transaction id'
-        //     // Production. Queue the sweep transaction to send the funds to the company wallet
-        //     else txId = await _this.queueTransaction(file.walletIndex)
-        //
-        //     console.log(`txId: ${txId}`)
-        //
-        //     // Update file model into db
-        //     // File has been marked as paid
-        //     if (txId) {
-        //       const temporalHash = await _this.uploadToTemporal(file)
-        //       // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
-        //       console.log(
-        //         `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
-        //       )
-        //
-        //       // Write the data to the logs.
-        //       wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
-        //
-        //       // Asigning file as paid
-        //       file.hasBeenPaid = true
-        //       file.payloadLink = temporalHash
-        //
-        //       await file.save()
-        //
-        //       sweepInfo.paid++
-        //       sweepInfo.unpaid--
-        //     }
-        //   }
       }
 
       // console.log(`Sweep Info : ${JSON.stringify(sweepInfo)}`)
