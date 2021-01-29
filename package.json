@@ -29,6 +29,7 @@
   "repository": "Permissionless-Software-Foundation/ipfs-upload-server",
   "dependencies": {
     "@psf/bch-js": "3.6.4",
+    "@textile/hub": "^5.2.0",
     "apidoc": "^0.23.0",
     "axios": "^0.19.2",
     "bch-util": "^1.2.1",

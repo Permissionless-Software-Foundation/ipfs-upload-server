@@ -25,6 +25,9 @@ const jwtLib = new JwtLib({
   password: process.env.FULLSTACKPASS
 })
 
+// Textile Lib
+const Textile = require('./textileio')
+const textile = new Textile()
 const BCHJS = require('@psf/bch-js')
 let bchjs
 if (NETWORK === 'mainnet') {
@@ -71,10 +74,12 @@ class BCH {
     this.TIMEOUT_RENEW = 60000 * 60 * 2 // timeout to renew temporal jwt
     this.bchUtil = new BchUtil()
 
+    this.textile = textile
+
     // Log into Temporal and get a JWT token when app is started.
     this.temporalJwt = ''
-    this.loginTemporal()
-    this.renewTemporalJWT()
+    // this.loginTemporal()
+    // this.renewTemporalJWT()
 
     // Renew the JWT token every 24 hours
     setInterval(async function () {
@@ -627,7 +632,7 @@ class BCH {
         // Update file model into db
         // File has been marked as paid
         if (txId) {
-          const temporalHash = await _this.uploadToTemporal(file)
+          const temporalHash = await _this.bucketPushPath(file)
           // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
           console.log(
             `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
@@ -672,7 +677,6 @@ class BCH {
 
       // Chunk the list of files into an array of 20-element arrays.
       const chunkedFiles = this.bchUtil.util.chunk20(files)
-
       // Loop through each chunk (of 20 files/BCH addresses).
       for (let i = 0; i < chunkedFiles.length; i++) {
         const thisChunk = chunkedFiles[i]
@@ -798,7 +802,6 @@ class BCH {
 
       const addr = file.bchAddr
       const resultBalance = await _this.getElectrumxBalance(addr)
-
       if (!resultBalance.success) {
         throw new Error(`Failed to get balance for address ${addr}`)
       }
@@ -816,7 +819,7 @@ class BCH {
         // Update file model into db
         // File has been marked as paid
         if (txId) {
-          const temporalHash = await _this.uploadToTemporal(file)
+          const temporalHash = await _this.bucketPushPath(file)
           // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
           console.log(
             `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
@@ -834,6 +837,46 @@ class BCH {
       throw error
     }
   }
+
+
+  // Upload a file to textileio.
+  async bucketPushPath (fileObj) {
+    try {
+      console.log(`fileObj: ${JSON.stringify(fileObj, null, 2)}`)
+      console.log(`directory: ${__dirname}`)
+
+      // Get the filename for the file to be uploaded.
+      // const uppyFileId = fileObj.fileId
+      // const tempSplit = uppyFileId.split('/')
+      // const fileName = tempSplit[tempSplit.length - 1]
+      const fileName = fileObj.fileName
+      console.log(`fileName: ${fileName}`)
+
+      // Compute the relative file path to the file to be uploaded.
+      const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
+      console.log(`relFilePath: ${relFilePath}`)
+
+
+       // Init bucket
+       const { buckets , bucketKey } = await  this.textile.initBucket()
+
+       // Get file buffer
+       const buff = fs.createReadStream(relFilePath)
+
+       const result = await textile.pushPath(buckets , bucketKey ,buff, fileName)
+       //const result = await buckets.pushPath(bucketKey, fileName, buff) 
+       
+       if(!result || !result.path.path){
+         throw new Error('Error trying to upload file')
+       }
+
+      return result.path.path
+    } catch (err) {
+      console.error('Error in bch.js/bucketPushPath()')
+      throw err
+    }
+  }
+
 }
 
 module.exports = BCH
