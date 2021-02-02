@@ -27,6 +27,7 @@ const jwtLib = new JwtLib({
 // Textile Lib
 const Textile = require('./textileio')
 const textile = new Textile()
+
 const BCHJS = require('@psf/bch-js')
 let bchjs
 if (NETWORK === 'mainnet') {
