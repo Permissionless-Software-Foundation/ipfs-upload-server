@@ -148,18 +148,17 @@ describe('#BCH', async function () {
 
     it('Should get utxos', async () => {
       try {
-        sandbox.stub(uut.bchjs.Blockbook, 'utxo').resolves(mockData.utxos)
+        sandbox.stub(uut.bchjs.Electrumx, 'utxo').resolves({ utxos: mockData.utxos })
 
         const addr = 'bchtest:qqehd2dzdc7wlm9l0lxy7pswnnxwar9r9czrecx0g5'
         const result = await uut.getUtxos(addr)
         const utxo = result[0]
 
         assert.isArray(result)
-        assert.property(utxo, 'txid')
-        assert.property(utxo, 'vout')
+        assert.property(utxo, 'tx_pos')
+        assert.property(utxo, 'tx_hash')
         assert.property(utxo, 'value')
         assert.property(utxo, 'confirmations')
-        assert.property(utxo, 'satoshis')
       } catch (err) {
         assert(false, 'Unexpected result')
       }
@@ -197,20 +196,20 @@ describe('#BCH', async function () {
 
         assert(false, 'Unexpected result')
       } catch (err) {
-        assert.include(err.message, 'utxo does not have a txid property')
+        assert.include(err.message, 'utxo does not have a tx_hash property')
       }
     })
-    it('Should throw error if utxos dont have vout property', async () => {
+    it('Should throw error if utxos dont have tx_pos property', async () => {
       try {
         const utxo = {
-          txid:
+          tx_hash:
             '4f8f9ff19acf3a1502204b561905d88c039b49b95bcb960bd02a4e4f211d9aaa'
         }
         await uut.isValidUtxo(utxo)
 
         assert(false, 'Unexpected result')
       } catch (err) {
-        assert.include(err.message, 'utxo does not have a vout property')
+        assert.include(err.message, 'utxo does not have a tx_pos property')
       }
     })
 
@@ -219,9 +218,9 @@ describe('#BCH', async function () {
         sandbox.stub(uut.bchjs.Blockchain, 'getTxOut').resolves(null)
 
         const utxo = {
-          txid:
+          tx_hash:
             '4f8f9ff19acf3a1502204b561905d88c039b49b95bcb960bd02a4e4f211d9aaa',
-          vout: 0
+          tx_pos: 0
         }
         const result = await uut.isValidUtxo(utxo)
         assert.isBoolean(result)
@@ -242,6 +241,7 @@ describe('#BCH', async function () {
         assert.include(err.message, 'fromAddr must be a string')
       }
     })
+
     it('Should throw error if hd index parameter is not provided', async () => {
       try {
         const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
@@ -252,6 +252,7 @@ describe('#BCH', async function () {
         assert.include(err.message, 'hdIndex must be a number')
       }
     })
+
     it('Should throw error if toAddr parameter is not provided', async () => {
       try {
         const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
@@ -263,11 +264,12 @@ describe('#BCH', async function () {
         assert.include(err.message, 'toAddr must be a string')
       }
     })
+
     it('Should throw error if utxos is invalid type', async () => {
       try {
         sandbox.stub(uut.bchjs.Blockchain, 'getTxOut').resolves(null)
 
-        sandbox.stub(uut.bchjs.Blockbook, 'utxo').resolves(1)
+        sandbox.stub(uut.bchjs.Electrumx, 'utxo').resolves({ utxos: 1 })
 
         const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
         const toAddr = 'bchtest:qqehd2dzdc7wlm9l0lxy7pswnnxwar9r9czrecx0g5'
@@ -280,11 +282,12 @@ describe('#BCH', async function () {
         assert.include(err.message, 'utxos must be an array.')
       }
     })
+
     it('Should throw error if utxos is empty array', async () => {
       try {
         sandbox.stub(uut.bchjs.Blockchain, 'getTxOut').resolves(null)
 
-        sandbox.stub(uut.bchjs.Blockbook, 'utxo').resolves([])
+        sandbox.stub(uut.bchjs.Electrumx, 'utxo').resolves({ utxos: [] })
 
         const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
         const toAddr = 'bchtest:qqehd2dzdc7wlm9l0lxy7pswnnxwar9r9czrecx0g5'
@@ -297,11 +300,12 @@ describe('#BCH', async function () {
         assert.include(err.message, 'No utxos found.')
       }
     })
+
     it('Should throw error if UTXOs is not valid', async () => {
       try {
         sandbox.stub(uut.bchjs.Blockchain, 'getTxOut').resolves(null)
 
-        sandbox.stub(uut.bchjs.Blockbook, 'utxo').resolves(mockData.utxos)
+        sandbox.stub(uut.bchjs.Electrumx, 'utxo').resolves({ utxos: mockData.utxos })
 
         const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
         const toAddr = 'bchtest:qqehd2dzdc7wlm9l0lxy7pswnnxwar9r9czrecx0g5'
@@ -317,11 +321,12 @@ describe('#BCH', async function () {
         )
       }
     })
+
     it('Should send all addrs', async () => {
       try {
         sandbox.stub(uut.bchjs.Blockchain, 'getTxOut').resolves(true)
 
-        sandbox.stub(uut.bchjs.Blockbook, 'utxo').resolves(mockData.utxos)
+        sandbox.stub(uut.bchjs.Electrumx, 'utxo').resolves({ utxos: mockData.utxos })
 
         const fromAddr = 'bchtest:qrf2xushgcegglz5dp8pekfayr0dhdx54q0zr0nnus'
         const toAddr = 'bchtest:qqehd2dzdc7wlm9l0lxy7pswnnxwar9r9czrecx0g5'
@@ -331,6 +336,7 @@ describe('#BCH', async function () {
 
         assert.isString(result, 'Expected hex')
       } catch (err) {
+        console.log('Error: ', err)
         assert(false, 'Unexpected result')
       }
     })

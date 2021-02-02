@@ -233,7 +233,7 @@ class BCH {
   }
 
   // Retrieve the utxos for a given address from an indexer.
-  // Current indexer used: Blockbook
+  // Current indexer used: Electrumx
   async getUtxos (addr) {
     try {
       if (!addr || typeof addr !== 'string') {
@@ -243,11 +243,11 @@ class BCH {
       const bchAddr = _this.bchjs.Address.toCashAddress(addr)
       // console.log(`bchAddr: ${bchAddr}`)
 
-      // Get balance for address from Blockbook
-      const utxos = await _this.bchjs.Blockbook.utxo(bchAddr)
+      // Get UTXOs associated with an address.
+      const utxos = await _this.bchjs.Electrumx.utxo(bchAddr)
       // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
-      return utxos
+      return utxos.utxos
     } catch (err) {
       wlogger.error('Error in bch.js/getUtxos()')
 
@@ -304,14 +304,14 @@ class BCH {
   async isValidUtxo (utxo) {
     try {
       // Input validation.
-      if (!utxo.txid) throw new Error('utxo does not have a txid property')
-      if (!utxo.vout && utxo.vout !== 0) {
-        throw new Error('utxo does not have a vout property')
+      if (!utxo.tx_hash) throw new Error('utxo does not have a tx_hash property')
+      if (!utxo.tx_pos && utxo.tx_pos !== 0) {
+        throw new Error('utxo does not have a tx_pos property')
       }
 
       // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
 
-      const txout = await _this.bchjs.Blockchain.getTxOut(utxo.txid, utxo.vout)
+      const txout = await _this.bchjs.Blockchain.getTxOut(utxo.tx_hash, utxo.tx_pos)
       // console.log(`txout: ${JSON.stringify(txout, null, 2)}`)
 
       if (txout === null) return false
@@ -360,9 +360,9 @@ class BCH {
       for (var i = 0; i < utxos.length; i++) {
         const utxo = utxos[i]
 
-        originalAmount = originalAmount + utxo.satoshis
+        originalAmount = originalAmount + utxo.value
 
-        transactionBuilder.addInput(utxo.txid, utxo.vout)
+        transactionBuilder.addInput(utxo.tx_hash, utxo.tx_pos)
       }
 
       if (originalAmount < 1) {
@@ -413,7 +413,7 @@ class BCH {
           keyPair,
           redeemScript,
           transactionBuilder.hashTypes.SIGHASH_ALL,
-          utxo.satoshis
+          utxo.value
         )
       }
 
@@ -565,7 +565,7 @@ class BCH {
 
       // Get unpaid files from db
       const files = await _this.File.find({ hasBeenPaid: false })
-      console.log(`unpaid files: ${JSON.stringify(files, null, 2)}`)
+      // console.log(`unpaid files: ${JSON.stringify(files, null, 2)}`)
 
       if (!files.length) {
         console.log('No unpaid files found')
