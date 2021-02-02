@@ -1,7 +1,7 @@
 const price = 250
 
 const filesMockData = {
-    price
+  price
 }
 
 module.exports = filesMockData

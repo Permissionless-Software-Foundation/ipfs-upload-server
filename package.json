@@ -10,7 +10,7 @@
     "lint": "standard --env mocha --fix",
     "docs": "./node_modules/.bin/apidoc -i src/ -o docs",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "coverage:report": "nyc --reporter=html mocha --exit",
+    "coverage:report": "export IPFS_UPLOAD_ENV=test && nyc --reporter=html mocha --exit",
     "prep-test": "node util/users/delete-all-test-users.js"
   },
   "keywords": [
@@ -29,6 +29,7 @@
   "repository": "Permissionless-Software-Foundation/ipfs-upload-server",
   "dependencies": {
     "@psf/bch-js": "3.6.4",
+    "@textile/hub": "^5.2.0",
     "apidoc": "^0.23.0",
     "axios": "^0.19.2",
     "bch-util": "^1.2.1",
@@ -51,7 +52,6 @@
     "p-retry": "^4.2.0",
     "passport-local": "^1.0.0",
     "slp-cli-wallet": "^2.0.5",
-    "temporal-js": "^2.0.0",
     "tus-node-server": "^0.3.2",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.0.0"
