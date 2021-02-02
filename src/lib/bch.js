@@ -69,10 +69,9 @@ class BCH {
     this.pRetry = pRetry
     this.config = config
     this.TIMEOUT = 5000 // timeout between intervals when retrying transactions.
-    this.bchUtil = new BchUtil()
+    this.bchUtil = new BchUtil({ bchjs })
 
     this.textile = textile
-
 
     // Renew the JWT token every 24 hours
     setInterval(async function () {
@@ -119,7 +118,6 @@ class BCH {
     }
   }
 
- 
   async getPrice () {
     try {
       const coinURL = 'https://api.coinbase.com/v2/exchange-rates?currency=BCH'
@@ -599,9 +597,9 @@ class BCH {
         if (txId) {
           const textileHash = await _this.bucketPushPath(file.fileName)
 
-          //console.log(
+          // console.log(
           //  `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
-          //)
+          // )
 
           // Write the data to the logs.
           wlogger.info(`TXID ${txId} paid for IPFS file ${textileHash}`)
@@ -744,11 +742,10 @@ class BCH {
     }
   }
 
-
   // Upload a file to textileio.
   async bucketPushPath (fileName) {
     try {
-      if(!fileName || typeof fileName !== 'string'){
+      if (!fileName || typeof fileName !== 'string') {
         throw new Error('fileName must be a string')
       }
       console.log(`fileName: ${fileName}`)
@@ -757,21 +754,21 @@ class BCH {
       const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
       console.log(`relFilePath: ${relFilePath}`)
 
-       // Auth to hub
-       const { id } = await this.textile.authUser()
-       // Init bucket
-       const { buckets , bucketKey } = await this.textile.initBucket(id)
+      // Auth to hub
+      const { id } = await this.textile.authUser()
+      // Init bucket
+      const { buckets, bucketKey } = await this.textile.initBucket(id)
 
-       // Get file buffer
-       const buff = this.fs.createReadStream(relFilePath)
+      // Get file buffer
+      const buff = this.fs.createReadStream(relFilePath)
 
-       // Push file
-       const result = await textile.pushPath(buckets , bucketKey ,buff, fileName)
+      // Push file
+      const result = await textile.pushPath(buckets, bucketKey, buff, fileName)
 
-       const { path } = result
-       if(!path || !path.path){
-         throw new Error('Error trying to upload file')
-       }
+      const { path } = result
+      if (!path || !path.path) {
+        throw new Error('Error trying to upload file')
+      }
       console.log(`IPFS hash : ${path.path}`)
       return path.path // return ipfs hash
     } catch (err) {
@@ -779,7 +776,6 @@ class BCH {
       throw err
     }
   }
-
 }
 
 module.exports = BCH

@@ -1,8 +1,7 @@
 /**
- * 
- * @textile/hub Mocks 
+ *
+ * @textile/hub Mocks
  */
-
 
 // Auth Keys
 
@@ -12,7 +11,6 @@ const USERKEY = 'bbaareiavmr6rszwqldtcenujqatp2uzd4sgfaoaz6pmejqdfrr6qu3scyq'
 const SECRETKEY = 'b7bna3rw4o27pewo6zgjhyczowzvrlurgf3ryulq'
 const GROUPKEY = 'b2mqyfghnqgt6sxy27y2lvddx44'
 
-
 // User model
 const user = {
   sig: 'buedhvywy3w7xe4ppojs6zf3ttdjplj72ul5mzi77r332cegdha7q',
@@ -20,7 +18,6 @@ const user = {
   key: 'b2mqyfghnqgt7sxy27y2lvsdx44',
   token: undefined
 }
-
 
 const token = 'eyJhbGciOiJFZDI1NTE5IinidHlwIjoiSldlIn0.eyJpYXQiOjE2MTIyMDg0ODAsImlzcyI6ImJiYWFyZWlnd2pvYXd1ZWc1a3ZobWMzNjI3Z3Zja2htZTd6emZlbnVqYXVqcHRodGd6Y21odHRvYTZ1Iiwic3ViIjoiYmJhYXJlaWFjdzN4eGVlaml6cGJiYW1kdTN3empqcHo3dG4yZm93c2VzYmNibjZ6NGU2dHg2aHZ5cmkifQ.HBxLZiL0_ULr4uRX1jiHIWHDA2n1rwyfnBPELJ2PdKVc7dshByeMyGPsblqCYqseiew4CL3QOofPGqQjzC8aCA'
 
@@ -56,7 +53,7 @@ const buckets = {
 }
 // Clients Mock
 const client = {
-  getToken: () => { return token },
+  getToken: () => { return token }
 
 }
 

@@ -12,7 +12,6 @@ util.inspect.defaultOptions = { depth: 1 }
 const TEXTILEIO = require('../src/lib/textileio')
 let uut // Unit Under Test.
 
-
 describe('#TEXTILEIO', async function () {
   let sandbox
 
@@ -49,7 +48,6 @@ describe('#TEXTILEIO', async function () {
         // console.log(`result : ${JSON.stringify(result)}`)
         assert.property(result, 'id')
         assert.property(result, 'token')
-
       } catch (err) {
         assert(false, 'Unexpected result')
       }
@@ -62,7 +60,6 @@ describe('#TEXTILEIO', async function () {
 
         await uut.authUser()
         assert(false, 'Unexpected result')
-
       } catch (err) {
         assert.include(err.message, 'test error')
       }
@@ -76,26 +73,20 @@ describe('#TEXTILEIO', async function () {
           .stub(uut.Textile.Buckets, 'withKeyInfo')
           .resolves(mockData.buckets)
 
-
         const result = await uut.initBucket('id')
         // console.log(`result : ${JSON.stringify(result)}`)
         assert.property(result, 'buckets')
         assert.property(result, 'bucketKey')
-
       } catch (err) {
-
         assert(false, 'Unexpected result')
       }
     })
     it('should throw error if id property is not provided', async () => {
       try {
-
-        const result = await uut.initBucket()
+        await uut.initBucket()
         assert(false, 'Unexpected result')
-
       } catch (err) {
         assert.include(err.message, "Textile auth 'id' is required")
-
       }
     })
     it('should throw error if userGroupKey variable is not defined', async () => {
@@ -103,10 +94,8 @@ describe('#TEXTILEIO', async function () {
         uut.userGroupKey = null
         await uut.initBucket('id')
         assert(false, 'Unexpected result')
-
       } catch (err) {
         assert.include(err.message, "Textile 'GROUPKEY' is required")
-
       }
     })
     it('should throw error if userGroupKeySecret variable is not defined', async () => {
@@ -114,10 +103,8 @@ describe('#TEXTILEIO', async function () {
         uut.userGroupKeySecret = null
         await uut.initBucket('id')
         assert(false, 'Unexpected result')
-
       } catch (err) {
         assert.include(err.message, "Textile 'SECRETKEY' is required")
-
       }
     })
   })
@@ -128,7 +115,6 @@ describe('#TEXTILEIO', async function () {
         sandbox
           .stub(uut.Textile.Buckets, 'withKeyInfo')
           .resolves(mockData.buckets)
-
 
         const buckets = await uut.initBucket('id')
 
@@ -147,21 +133,17 @@ describe('#TEXTILEIO', async function () {
         assert.property(path, 'cid')
         assert.property(path, 'root')
         assert.property(path, 'remainder')
-
       } catch (err) {
         assert(false, 'Unexpected result')
       }
     })
     it('should throw error if buckets object is not provided', async () => {
       try {
-
         await uut.pushPath()
 
         assert(false, 'Unexpected result')
-
       } catch (err) {
-        assert.include(err.message, "buckets object is required")
-
+        assert.include(err.message, 'buckets object is required')
       }
     })
     it('should throw error if bucketKey  is not provided', async () => {
@@ -170,18 +152,15 @@ describe('#TEXTILEIO', async function () {
           .stub(uut.Textile.Buckets, 'withKeyInfo')
           .resolves(mockData.buckets)
 
-
         const buckets = await uut.initBucket('id')
 
         await uut.pushPath(
-          buckets.buckets,
+          buckets.buckets
         )
 
         assert(false, 'Unexpected result')
-
       } catch (err) {
-        assert.include(err.message, "bucketKey is required")
-
+        assert.include(err.message, 'bucketKey is required')
       }
     })
     it('should throw error if buffer  is not provided', async () => {
@@ -190,19 +169,16 @@ describe('#TEXTILEIO', async function () {
           .stub(uut.Textile.Buckets, 'withKeyInfo')
           .resolves(mockData.buckets)
 
-
         const buckets = await uut.initBucket('id')
 
         await uut.pushPath(
           buckets.buckets,
-          buckets.bucketKey,
+          buckets.bucketKey
         )
 
         assert(false, 'Unexpected result')
-
       } catch (err) {
-        assert.include(err.message, "file buffer is required")
-
+        assert.include(err.message, 'file buffer is required')
       }
     })
     it('should throw error if file path  is not provided', async () => {
@@ -211,20 +187,17 @@ describe('#TEXTILEIO', async function () {
           .stub(uut.Textile.Buckets, 'withKeyInfo')
           .resolves(mockData.buckets)
 
-
         const buckets = await uut.initBucket('id')
 
         await uut.pushPath(
           buckets.buckets,
           buckets.bucketKey,
-          'buffer',
+          'buffer'
         )
 
         assert(false, 'Unexpected result')
-
       } catch (err) {
-        assert.include(err.message, "file path is required")
-
+        assert.include(err.message, 'file path is required')
       }
     })
   })

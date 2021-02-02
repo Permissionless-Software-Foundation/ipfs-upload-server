@@ -3,7 +3,7 @@ const Textile = require('@textile/hub')
 
 let _this
 class TEXTILEIO {
-  constructor() {
+  constructor () {
     this.Textile = Textile
 
     // env data
@@ -14,9 +14,8 @@ class TEXTILEIO {
     _this = this
   }
 
-
   // Authenticate user with hub.
-  async authUser() {
+  async authUser () {
     try {
       const id = _this.Textile.PrivateKey.fromString(_this.userKey)
 
@@ -39,9 +38,9 @@ class TEXTILEIO {
   }
 
   // Create or get an existing bucket
-  async initBucket(id) {
+  async initBucket (id) {
     try {
-      if(!id){
+      if (!id) {
         throw new Error("Textile auth 'id' is required")
       }
       if (!_this.userGroupKey) {
@@ -67,30 +66,30 @@ class TEXTILEIO {
       throw error
     }
   }
+
   // Upload a file to the selected bucket
-  async pushPath(buckets, bucketKey, buffer, path) {
+  async pushPath (buckets, bucketKey, buffer, path) {
     try {
-      if(!buckets){
-        throw new Error("buckets object is required")
+      if (!buckets) {
+        throw new Error('buckets object is required')
       }
-      if(!bucketKey){
-        throw new Error("bucketKey is required")
+      if (!bucketKey) {
+        throw new Error('bucketKey is required')
       }
-      if(!buffer){
-        throw new Error("file buffer is required")
+      if (!buffer) {
+        throw new Error('file buffer is required')
       }
-      if(!path){
-        throw new Error("file path is required")
+      if (!path) {
+        throw new Error('file path is required')
       }
       const result = await buckets.pushPath(bucketKey, path, buffer)
-  
+
       return result
     } catch (error) {
       console.log('Error in lib/textile.pushPath()')
       throw error
     }
   }
-
 }
 
 module.exports = TEXTILEIO

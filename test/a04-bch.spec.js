@@ -583,7 +583,7 @@ describe('#BCH', async function () {
   })
   describe('#bucketPushPath', () => {
     it('should push file to textile hub', async () => {
-      // Mock 
+      // Mock
       sandbox
         .stub(uut.textile, 'authUser')
         .resolves('auth id')
@@ -604,41 +604,36 @@ describe('#BCH', async function () {
     })
     it('should handle error if fileName property is not provided', async () => {
       try {
-        
-      await uut.bucketPushPath()
-      assert(false, 'Unexpected result')
- 
+        await uut.bucketPushPath()
+        assert(false, 'Unexpected result')
       } catch (err) {
         assert.include(err.message, 'fileName must be a string')
       }
     })
     it('should handle error if fileName property is invalid type', async () => {
       try {
-        
-      await uut.bucketPushPath(1)
-      assert(false, 'Unexpected result')
- 
+        await uut.bucketPushPath(1)
+        assert(false, 'Unexpected result')
       } catch (err) {
         assert.include(err.message, 'fileName must be a string')
       }
     })
     it('should handle error if hash not found', async () => {
       try {
-              // Mock 
-      sandbox
-      .stub(uut.textile, 'authUser')
-      .resolves('auth id')
+        // Mock
+        sandbox
+          .stub(uut.textile, 'authUser')
+          .resolves('auth id')
 
-    sandbox
-      .stub(uut.textile, 'initBucket')
-      .resolves({ buckets: 'buckets object', bucketKey: 'bucketKey' })
+        sandbox
+          .stub(uut.textile, 'initBucket')
+          .resolves({ buckets: 'buckets object', bucketKey: 'bucketKey' })
 
-    sandbox
-      .stub(uut.textile, 'pushPath')
-      .resolves({  })
-      await uut.bucketPushPath('README.md')
-      assert(false, 'Unexpected result')
- 
+        sandbox
+          .stub(uut.textile, 'pushPath')
+          .resolves({ })
+        await uut.bucketPushPath('README.md')
+        assert(false, 'Unexpected result')
       } catch (err) {
         assert.include(err.message, 'Error trying to upload file')
       }

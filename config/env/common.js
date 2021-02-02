@@ -11,5 +11,5 @@ module.exports = {
   feePerMb: 0.001,
   apiJwt: process.env.BCHJSTOKEN || '',
   // companyAddr: 'bchtest:qrhth6acvw8rf37jcz4wwd9uu902enyfksjgk6e9yr',
-  companyAddr: 'bitcoincash:qqsrke9lh257tqen99dkyy2emh4uty0vky9y0z0lsr',
+  companyAddr: 'bitcoincash:qqsrke9lh257tqen99dkyy2emh4uty0vky9y0z0lsr'
 }
