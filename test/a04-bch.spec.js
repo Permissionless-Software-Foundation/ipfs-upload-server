@@ -22,7 +22,7 @@ const deleteFile = filepath => {
   try {
     // Delete state if exist
     fs.unlinkSync(filepath)
-  } catch (error) {}
+  } catch (error) { }
 }
 
 describe('#BCH', async function () {
@@ -471,7 +471,7 @@ describe('#BCH', async function () {
           .stub(uut.bchjs.Electrumx, 'balance')
           .resolves(mockData.PositiveElectrumxBalance)
 
-        sandbox.stub(uut, 'uploadToTemporal').resolves('test-hash')
+        sandbox.stub(uut, 'bucketPushPath').resolves('test-hash')
 
         const files = await File.find({ hasBeenPaid: false })
 
@@ -524,7 +524,7 @@ describe('#BCH', async function () {
     //
     //     sandbox.stub(uut, 'scanForPaidFiles').resolves([mockData.mockFiles[9]])
     //     sandbox.stub(uut, 'queueTransaction').resolves('test-txid')
-    //     sandbox.stub(uut, 'uploadToTemporal').resolves('test-hash')
+    //     sandbox.stub(uut, 'bucketPushPath').resolves('test-hash')
     //
     //     // const files = await File.find({ hasBeenPaid: false })
     //
@@ -579,6 +579,69 @@ describe('#BCH', async function () {
       // Assert the result is an empty array.
       assert.isArray(result)
       assert.equal(result.length, 0)
+    })
+  })
+  describe('#bucketPushPath', () => {
+    it('should push file to textile hub', async () => {
+      // Mock 
+      sandbox
+        .stub(uut.textile, 'authUser')
+        .resolves('auth id')
+
+      sandbox
+        .stub(uut.textile, 'initBucket')
+        .resolves({ buckets: 'buckets object', bucketKey: 'bucketKey' })
+
+      sandbox
+        .stub(uut.textile, 'pushPath')
+        .resolves({ path: { path: 'ipfs hash' } })
+
+      const result = await uut.bucketPushPath('README.md')
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      // Ensure the result is an array and has the proper shape.
+      assert.isString(result)
+    })
+    it('should handle error if fileName property is not provided', async () => {
+      try {
+        
+      await uut.bucketPushPath()
+      assert(false, 'Unexpected result')
+ 
+      } catch (err) {
+        assert.include(err.message, 'fileName must be a string')
+      }
+    })
+    it('should handle error if fileName property is invalid type', async () => {
+      try {
+        
+      await uut.bucketPushPath(1)
+      assert(false, 'Unexpected result')
+ 
+      } catch (err) {
+        assert.include(err.message, 'fileName must be a string')
+      }
+    })
+    it('should handle error if hash not found', async () => {
+      try {
+              // Mock 
+      sandbox
+      .stub(uut.textile, 'authUser')
+      .resolves('auth id')
+
+    sandbox
+      .stub(uut.textile, 'initBucket')
+      .resolves({ buckets: 'buckets object', bucketKey: 'bucketKey' })
+
+    sandbox
+      .stub(uut.textile, 'pushPath')
+      .resolves({  })
+      await uut.bucketPushPath('README.md')
+      assert(false, 'Unexpected result')
+ 
+      } catch (err) {
+        assert.include(err.message, 'Error trying to upload file')
+      }
     })
   })
 })

@@ -2,7 +2,6 @@
 const axios = require('axios').default
 const fs = require('fs')
 const pRetry = require('p-retry')
-const Temporal = require('temporal-js')
 const BchUtil = require('bch-util')
 
 const config = require('../../config')
@@ -68,18 +67,12 @@ class BCH {
     this.fs = fs
     this.File = File
     this.pRetry = pRetry
-    this.temporal = new Temporal(true)
     this.config = config
     this.TIMEOUT = 5000 // timeout between intervals when retrying transactions.
-    this.TIMEOUT_RENEW = 60000 * 60 * 2 // timeout to renew temporal jwt
     this.bchUtil = new BchUtil()
 
     this.textile = textile
 
-    // Log into Temporal and get a JWT token when app is started.
-    this.temporalJwt = ''
-    // this.loginTemporal()
-    // this.renewTemporalJWT()
 
     // Renew the JWT token every 24 hours
     setInterval(async function () {
@@ -126,35 +119,7 @@ class BCH {
     }
   }
 
-  // This method is intended to be run at startup to log into temporal and fetch
-  // a JWT token.
-  async loginTemporal () {
-    try {
-      // Exit if the JWT has already been retrieved.
-      if (_this.temporalJwt) return
-
-      // Exit if we are in a testing environment.
-      if (config.env === 'test') return
-
-      // Throw up a warning if no login information has been provided.
-      if (!_this.config.temporalLogin) {
-        console.warn('Warning: No Temporal.cloud login info provided.')
-        return
-      }
-
-      // Log into temporal
-      const jwt = await _this.temporal.login(
-        _this.config.temporalLogin,
-        _this.config.temporalPass
-      )
-      _this.temporalJwt = jwt
-
-      console.log('Successfully logged into Temporal.cloud')
-    } catch (err) {
-      console.error('Error in bch.js/loginTemporal()')
-    }
-  }
-
+ 
   async getPrice () {
     try {
       const coinURL = 'https://api.coinbase.com/v2/exchange-rates?currency=BCH'
@@ -632,18 +597,18 @@ class BCH {
         // Update file model into db
         // File has been marked as paid
         if (txId) {
-          const temporalHash = await _this.bucketPushPath(file)
-          // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
-          console.log(
-            `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
-          )
+          const textileHash = await _this.bucketPushPath(file.fileName)
+
+          //console.log(
+          //  `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+          //)
 
           // Write the data to the logs.
-          wlogger.info(`TXID ${txId} paid for IPFS file ${temporalHash}`)
+          wlogger.info(`TXID ${txId} paid for IPFS file ${textileHash}`)
 
           // Asigning file as paid
           file.hasBeenPaid = true
-          file.payloadLink = temporalHash
+          file.payloadLink = textileHash
 
           // Update the model in the database.
           await file.save()
@@ -716,67 +681,8 @@ class BCH {
     }
   }
 
-  // Upload a file to the temporal.cloud server.
-  async uploadToTemporal (fileObj) {
-    try {
-      console.log(`fileObj: ${JSON.stringify(fileObj, null, 2)}`)
-      console.log(`directory: ${__dirname}`)
-
-      if (!_this.temporalJwt) throw new Error('No Temporal JWT is available.')
-
-      // Get the filename for the file to be uploaded.
-      // const uppyFileId = fileObj.fileId
-      // const tempSplit = uppyFileId.split('/')
-      // const fileName = tempSplit[tempSplit.length - 1]
-      const fileName = fileObj.fileName
-      console.log(`fileName: ${fileName}`)
-
-      // Compute the relative file path to the file to be uploaded.
-      const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
-      console.log(`relFilePath: ${relFilePath}`)
-
-      // Upload the file to Temporal.cloud.
-      const hash = await _this.temporal.uploadPublicFile(
-        fs.createReadStream(relFilePath),
-        1
-      )
-
-      return hash
-    } catch (err) {
-      console.error('Error in bch.js/uploadToTemporal()')
-      throw err
-    }
-  }
-
   sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
-  // re logs in temporal to get a new JWT
-
-  async renewTemporalJWT () {
-    setInterval(async () => {
-      try {
-        // Exit if we are in a testing environment.
-        if (config.env === 'test') return
-
-        // Throw up a warning if no login information has been provided.
-        if (!_this.config.temporalLogin) {
-          console.warn('Warning: No Temporal.cloud login info provided.')
-          return
-        }
-
-        // Log into temporal
-        const jwt = await _this.temporal.login(
-          _this.config.temporalLogin,
-          _this.config.temporalPass
-        )
-        _this.temporalJwt = jwt
-        // console.log(`New Temporal JWT ${JSON.stringify(jwt, null, 2)}`)
-      } catch (error) {
-        console.error('Error in bch.js/renewTemporalJWT()')
-      }
-    }, _this.TIMEOUT_RENEW)
   }
 
   // Verifies the balance of an specific file a check it as
@@ -819,14 +725,14 @@ class BCH {
         // Update file model into db
         // File has been marked as paid
         if (txId) {
-          const temporalHash = await _this.bucketPushPath(file)
+          const textileHash = await _this.bucketPushPath(file.fileName)
           // console.log(`temporalData: ${JSON.stringify(temporalData, null, 2)}`)
-          console.log(
-            `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
-          )
+          // console.log(
+          //   `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+          // )
 
           file.hasBeenPaid = true
-          file.payloadLink = temporalHash
+          file.payloadLink = textileHash
 
           await file.save()
         }
@@ -840,37 +746,34 @@ class BCH {
 
 
   // Upload a file to textileio.
-  async bucketPushPath (fileObj) {
+  async bucketPushPath (fileName) {
     try {
-      console.log(`fileObj: ${JSON.stringify(fileObj, null, 2)}`)
-      console.log(`directory: ${__dirname}`)
-
-      // Get the filename for the file to be uploaded.
-      // const uppyFileId = fileObj.fileId
-      // const tempSplit = uppyFileId.split('/')
-      // const fileName = tempSplit[tempSplit.length - 1]
-      const fileName = fileObj.fileName
+      if(!fileName || typeof fileName !== 'string'){
+        throw new Error('fileName must be a string')
+      }
       console.log(`fileName: ${fileName}`)
 
       // Compute the relative file path to the file to be uploaded.
       const relFilePath = `${__dirname}/../../uppy-files/${fileName}`
       console.log(`relFilePath: ${relFilePath}`)
 
-
+       // Auth to hub
+       const { id } = await this.textile.authUser()
        // Init bucket
-       const { buckets , bucketKey } = await  this.textile.initBucket()
+       const { buckets , bucketKey } = await this.textile.initBucket(id)
 
        // Get file buffer
-       const buff = fs.createReadStream(relFilePath)
+       const buff = this.fs.createReadStream(relFilePath)
 
+       // Push file
        const result = await textile.pushPath(buckets , bucketKey ,buff, fileName)
-       //const result = await buckets.pushPath(bucketKey, fileName, buff) 
-       
-       if(!result || !result.path.path){
+
+       const { path } = result
+       if(!path || !path.path){
          throw new Error('Error trying to upload file')
        }
-
-      return result.path.path
+      console.log(`IPFS hash : ${path.path}`)
+      return path.path // return ipfs hash
     } catch (err) {
       console.error('Error in bch.js/bucketPushPath()')
       throw err
