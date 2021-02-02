@@ -771,7 +771,12 @@ class BCH {
         throw new Error('Error trying to upload file')
       }
       console.log(`IPFS hash : ${path.path}`)
-      return path.path // return ipfs hash
+      // IPFS hash : /ipfs/bafybeidcwnkio5p32z3k3svjvk7arcxjxdkxgwczjhrbry2npun25coxga
+
+      // Remove the '/ipfs/' preface to the hash.
+      const hash = path.path.slice(6)
+
+      return hash
     } catch (err) {
       console.error('Error in bch.js/bucketPushPath()')
       throw err
