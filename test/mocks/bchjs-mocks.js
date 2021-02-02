@@ -52,9 +52,9 @@ const NegativeElectrumxBalance = {
 
 const utxos = [
   {
-    txid: '4f8f9ff19acf3a1502204b561905d88c039b49b95bcb960bd02a4e4f211d9aaa',
-    vout: 0,
-    value: '5000',
+    tx_hash: '4f8f9ff19acf3a1502204b561905d88c039b49b95bcb960bd02a4e4f211d9aaa',
+    tx_pos: 0,
+    value: 5000,
     confirmations: 0,
     satoshis: 5000
   }
