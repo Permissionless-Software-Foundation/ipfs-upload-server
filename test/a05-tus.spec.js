@@ -14,12 +14,12 @@ const File = require('../src/models/files')
 const fileName = 'cleanUpTest'
 const filePath = `${__dirname}/../uppy-files/${fileName}`
 
-const createFile = filepath => {
+const createFile = async filepath => {
   const Obj = {
     test: 'cleanUpTest'
   }
   try {
-    jsonFile.writeJSON(Obj, filepath)
+    await jsonFile.writeJSON(Obj, filepath)
   } catch (error) {
     console.log(error)
     throw error
@@ -99,7 +99,7 @@ describe('#tus-node-server', async function () {
           bchAddr: 'bchtest:qrcqp8ykwlhfeg9uart92ymw6q6wnwmpaclsf9krv9'
         }
 
-        createFile(filePath)
+        await createFile(filePath)
         const fileStored = await addFileModelToDb(fileModel)
         // console.log(`fileStored : ${JSON.stringify(fileStored, null, 2)}`)
 
@@ -130,7 +130,7 @@ describe('#tus-node-server', async function () {
           bchAddr: 'bchtest:qrcqp8ykwlhfeg9uart92ymw6q6wnwmpaclsf9krv9'
         }
 
-        createFile(filePath)
+        await createFile(filePath)
         const fileStored = await addFileModelToDb(fileModel)
         // console.log(`fileStored : ${JSON.stringify(fileStored, null, 2)}`)
 
