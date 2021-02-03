@@ -764,7 +764,7 @@ class BCH {
       const buff = this.fs.createReadStream(relFilePath)
 
       // Push file
-      const result = await textile.pushPath(buckets, bucketKey, buff, fileName)
+      const result = await this.textile.pushPath(buckets, bucketKey, buff, fileName)
 
       const { path } = result
       if (!path || !path.path) {
