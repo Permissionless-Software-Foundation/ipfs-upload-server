@@ -9,8 +9,8 @@ const wlogger = require('./wlogger')
 const File = require('../models/files')
 
 // REST API servers.
-const MAINNET_API = 'https://api.fullstack.cash/v3/'
-const TESTNET_API = 'https://tapi.fullstack.cash/v3/'
+const MAINNET_API = 'https://api.fullstack.cash/v4/'
+const TESTNET_API = 'https://tapi.fullstack.cash/v4/'
 
 let NETWORK = config.network
 const lang = 'english' // Set the language of the wallet.
@@ -109,7 +109,7 @@ class BCH {
 
       // Reinstantiate bchjs library so that it uses the new JWT token.
       if (config.network === 'testnet') {
-        _this.bchjs = new BCHJS({ restURL: 'http://tapi.fullstack.cash/v3/' })
+        _this.bchjs = new BCHJS({ restURL: 'http://tapi.fullstack.cash/v4/' })
       } else {
         _this.bchjs = new BCHJS()
       }
