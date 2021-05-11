@@ -491,7 +491,16 @@ class BCH {
         throw new pRetry.AbortError('No utxos found.')
       }
 
-      console.error(`Error in generateTransaction: ${err.message}`)
+      // Corner case handles when someone sends the app dust.
+      if (!err.message && err.error && err.error.includes('dust')) {
+        return 'dust'
+      }
+
+      // Handle other non-error errors.
+      if (!err.message && err.error) throw new Error(err.error)
+
+      // console.error(`Error in generateTransaction: ${err.message}`)
+      console.error('Error in generateTransaction: ', err)
       throw err
     }
   }
@@ -585,6 +594,7 @@ class BCH {
       // Iterate over the paid files.
       for (let i = 0; i < paidFiles.length; i++) {
         const file = paidFiles[i]
+        console.log(`file: ${JSON.stringify(file, null, 2)}`)
 
         let txId
 
