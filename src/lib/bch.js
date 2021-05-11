@@ -491,7 +491,8 @@ class BCH {
         throw new pRetry.AbortError('No utxos found.')
       }
 
-      console.error(`Error in generateTransaction: ${err.message}`)
+      // console.error(`Error in generateTransaction: ${err.message}`)
+      console.error('Error in generateTransaction: ', err)
       throw err
     }
   }
