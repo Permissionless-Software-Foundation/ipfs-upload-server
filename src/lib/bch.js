@@ -591,9 +591,11 @@ class BCH {
       // have recieved a payment.
       const paidFiles = await this.scanForPaidFiles(files)
 
+      let file
+
       // Iterate over the paid files.
       for (let i = 0; i < paidFiles.length; i++) {
-        const file = paidFiles[i]
+        file = paidFiles[i]
         console.log(`file: ${JSON.stringify(file, null, 2)}`)
 
         let txId
@@ -639,6 +641,15 @@ class BCH {
       wlogger.error('Error in bch.js/paymentsSweep(): ', error)
       // console.log(`config.network: ${config.network}`)
       // console.log(`process.env.NETWORK: ${process.env.NETWORK}`)
+
+      // Attempt to handle and display errors.
+      try {
+        file.hasBeenPaid = true
+        file.payloadLink = error.message
+        await file.save()
+      } catch (err) {
+        wlogger.error('Could not handle exception in bch.js/paymentsSweep()')
+      }
     }
   }
 
