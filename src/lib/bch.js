@@ -304,14 +304,19 @@ class BCH {
   async isValidUtxo (utxo) {
     try {
       // Input validation.
-      if (!utxo.tx_hash) throw new Error('utxo does not have a tx_hash property')
+      if (!utxo.tx_hash) {
+        throw new Error('utxo does not have a tx_hash property')
+      }
       if (!utxo.tx_pos && utxo.tx_pos !== 0) {
         throw new Error('utxo does not have a tx_pos property')
       }
 
       // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
 
-      const txout = await _this.bchjs.Blockchain.getTxOut(utxo.tx_hash, utxo.tx_pos)
+      const txout = await _this.bchjs.Blockchain.getTxOut(
+        utxo.tx_hash,
+        utxo.tx_pos
+      )
       // console.log(`txout: ${JSON.stringify(txout, null, 2)}`)
 
       if (txout === null) return false
@@ -479,8 +484,9 @@ class BCH {
       // If the error is anything other than 'no utxos found', then add
       // the transaction back into the queue to try again later.
       if (
-        err.message.indexOf('No utxos found') > -1 ||
-        err.message.indexOf('Invalid UTXO detected') > -1
+        err.message &&
+        (err.message.indexOf('No utxos found') > -1 ||
+          err.message.indexOf('Invalid UTXO detected') > -1)
       ) {
         throw new pRetry.AbortError('No utxos found.')
       }
@@ -509,11 +515,7 @@ class BCH {
         onFailedAttempt: async error => {
           // Log failed attempt.
           console.log(
-            `Attempt ${
-              error.attemptNumber
-            } to sweep HD index ${hdIndex} failed. There are ${
-              error.retriesLeft
-            } retries left. Waiting ${_this.TIMEOUT} milliseconds.`
+            `Attempt ${error.attemptNumber} to sweep HD index ${hdIndex} failed. There are ${error.retriesLeft} retries left. Waiting ${_this.TIMEOUT} milliseconds.`
           )
           _this.sleep(_this.TIMEOUT)
         },
@@ -764,7 +766,12 @@ class BCH {
       const buff = this.fs.createReadStream(relFilePath)
 
       // Push file
-      const result = await this.textile.pushPath(buckets, bucketKey, buff, fileName)
+      const result = await this.textile.pushPath(
+        buckets,
+        bucketKey,
+        buff,
+        fileName
+      )
 
       const { path } = result
       if (!path || !path.path) {
