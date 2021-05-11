@@ -93,7 +93,15 @@ class TEXTILEIO {
       return result
     } catch (error) {
       console.log('Error in lib/textile.pushPath()')
+
+      // Corner case: filename has unparsable characters.
       console.log(`error.message: ${error.message}`)
+      if (error.message.includes('parsing event')) {
+        throw new Error(
+          'Filename contains unparsable characters. Rename file and try upload again.'
+        )
+      }
+
       throw error
     }
   }
