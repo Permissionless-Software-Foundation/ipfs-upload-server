@@ -93,7 +93,7 @@ class TEXTILEIO {
       return result
     } catch (error) {
       console.log('Error in lib/textile.pushPath()')
-      console.log(`err.message: ${err.message}`)
+      console.log(`error.message: ${error.message}`)
       throw error
     }
   }
