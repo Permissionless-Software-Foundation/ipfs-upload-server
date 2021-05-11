@@ -20,7 +20,10 @@ class TEXTILEIO {
       const id = _this.Textile.PrivateKey.fromString(_this.userKey)
 
       // Create user auth object with auth signature valid for 30 minutes.
-      const user = await _this.Textile.createUserAuth(_this.userGroupKey, _this.userGroupKeySecret)
+      const user = await _this.Textile.createUserAuth(
+        _this.userGroupKey,
+        _this.userGroupKeySecret
+      )
 
       const client = await _this.Textile.Client.withUserAuth(user)
 
@@ -52,7 +55,10 @@ class TEXTILEIO {
 
       // Create a bucket
       const key = _this.userGroupKey
-      const buckets = await _this.Textile.Buckets.withKeyInfo({ key }, { debug: false })
+      const buckets = await _this.Textile.Buckets.withKeyInfo(
+        { key },
+        { debug: false }
+      )
 
       // Authorize the user and your insecure keys with getToken
       await buckets.getToken(id)
@@ -87,6 +93,7 @@ class TEXTILEIO {
       return result
     } catch (error) {
       console.log('Error in lib/textile.pushPath()')
+      console.log(`err.message: ${err.message}`)
       throw error
     }
   }
