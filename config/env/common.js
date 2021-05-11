@@ -8,7 +8,7 @@ module.exports = {
   logPass: 'test',
   // network: process.env.NETWORK ? process.env.NETWORK : 'testnet',
   network: 'mainnet',
-  feePerMb: 0.001,
+  feePerMb: 0.01,
   apiJwt: process.env.BCHJSTOKEN || '',
   // companyAddr: 'bchtest:qrhth6acvw8rf37jcz4wwd9uu902enyfksjgk6e9yr',
   companyAddr: 'bitcoincash:qqsrke9lh257tqen99dkyy2emh4uty0vky9y0z0lsr'
