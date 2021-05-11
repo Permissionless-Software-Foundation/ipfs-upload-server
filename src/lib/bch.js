@@ -491,6 +491,12 @@ class BCH {
         throw new pRetry.AbortError('No utxos found.')
       }
 
+      // Corner case handles when someone sends the app dust.
+      if (!err.message && err.error && err.error.includes('dust')) { throw new pRetry.AbortError('Output is less than dust') }
+
+      // Handle other non-error errors.
+      if (!err.message && err.error) throw new Error(err.error)
+
       // console.error(`Error in generateTransaction: ${err.message}`)
       console.error('Error in generateTransaction: ', err)
       throw err
