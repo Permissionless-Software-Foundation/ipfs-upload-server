@@ -73,7 +73,6 @@ class BCH {
     this.bchUtil = new BchUtil({ bchjs })
 
     this.textile = textile
-
     // Renew the JWT token every 24 hours
     setInterval(async function () {
       wlogger.info('Updating FullStack.cash JWT token')
@@ -610,18 +609,29 @@ class BCH {
         // Update file model into db
         // File has been marked as paid
         if (txId) {
-          const textileHash = await _this.bucketPushPath(file.fileName)
+          let textileHash
+          try {
+            textileHash = await _this.bucketPushPath(file.fileName)
 
-          // console.log(
-          //  `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
-          // )
+            // console.log(
+            //  `File can be downloaded from: https://gateway.temporal.cloud/ipfs/${temporalHash}`
+            // )
 
-          // Write the data to the logs.
-          wlogger.info(`TXID ${txId} paid for IPFS file ${textileHash}`)
+            // Write the data to the logs.
+            wlogger.info(`TXID ${txId} paid for IPFS file ${textileHash}`)
 
-          // Asigning file as paid
-          file.hasBeenPaid = true
-          file.payloadLink = textileHash
+            // Asigning file as paid
+            file.hasBeenPaid = true
+            file.payloadLink = textileHash
+          } catch (error) {
+            // Attempt to handle and display errors.
+            wlogger.info(`Attempt to handle and display errors. ${error.message}`)
+
+            // Asigning file as paid
+            // Asigning  error message to payloadLink
+            file.hasBeenPaid = true
+            file.payloadLink = `Error: ${error.message}`
+          }
 
           // Update the model in the database.
           await file.save()
@@ -641,15 +651,6 @@ class BCH {
       wlogger.error('Error in bch.js/paymentsSweep(): ', error)
       // console.log(`config.network: ${config.network}`)
       // console.log(`process.env.NETWORK: ${process.env.NETWORK}`)
-
-      // Attempt to handle and display errors.
-      try {
-        file.hasBeenPaid = true
-        file.payloadLink = error.message
-        await file.save()
-      } catch (err) {
-        wlogger.error('Could not handle exception in bch.js/paymentsSweep()')
-      }
     }
   }
 
